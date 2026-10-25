@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  AUTHOR
+  ADMIN
+}
+
+enum BookStatus {
+  MANUSCRIPT_RECEIVED
+  EDITING
+  COVER_DESIGN
+  TYPESETTING
+  PROOFREADING
+  ISBN_ASSIGNMENT
+  PRINTING
+  DISTRIBUTION_SETUP
+  PUBLISHED_LIVE
+  CANCELLED
+}
+
+enum RoyaltyPayoutStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketCategory {
+  ROYALTY_PAYMENTS
+  ISBN_METADATA_ISSUES
+  PRINTING_QUALITY
+  DISTRIBUTION_AVAILABILITY
+  BOOK_STATUS_PRODUCTION
+  GENERAL_INQUIRY
+}
+
+enum TicketPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ReplySenderType {
+  AUTHOR
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         UserRole  @default(AUTHOR)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  phone        String?
+  city         String?
+  joinedAt     DateTime?
+
+  books           Book[]
+  authoredTickets Ticket[]             @relation("TicketAuthor")
+  assignedTickets Ticket[]             @relation("TicketAssignee")
+  replies         TicketReply[]
+  internalNotes   TicketInternalNote[]
+}
+
+model Book {
+  id                   String     @id @default(cuid())
+  title                String
+  isbn                 String?    @unique
+  genre                String
+  publicationDate      DateTime?
+  status               BookStatus @default(MANUSCRIPT_RECEIVED)
+  mrp                  Decimal?   @db.Decimal(10, 2)
+  authorRoyaltyPerCopy Decimal?   @db.Decimal(10, 2)
+  totalCopiesSold      Int        @default(0)
+  totalRoyaltyEarned   Decimal    @default(0) @db.Decimal(12, 2)
+  royaltyPaid          Decimal    @default(0) @db.Decimal(12, 2)
+  royaltyPending       Decimal    @default(0) @db.Decimal(12, 2)
+  printPartner         String?
+  availableOn          Json?
+  authorId             String
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  author    User            @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  royalties RoyaltyRecord[]
+  tickets   Ticket[]
+
+  @@index([authorId])
+  @@index([status])
+}
+
+model RoyaltyRecord {
+  id                 String              @id @default(cuid())
+  bookId             String
+  periodStart        DateTime
+  periodEnd          DateTime
+  platform           String
+  copiesSold         Int                 @default(0)
+  mrpTotal           Decimal             @default(0) @db.Decimal(12, 2)
+  printingCost       Decimal             @default(0) @db.Decimal(12, 2)
+  platformCommission Decimal             @default(0) @db.Decimal(12, 2)
+  shippingCharges    Decimal             @default(0) @db.Decimal(12, 2)
+  netProfit          Decimal             @default(0) @db.Decimal(12, 2)
+  authorShare        Decimal             @default(0) @db.Decimal(12, 2)
+  amountPaid         Decimal             @default(0) @db.Decimal(12, 2)
+  amountPending      Decimal             @default(0) @db.Decimal(12, 2)
+  payoutStatus       RoyaltyPayoutStatus @default(PENDING)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
+
+  @@index([bookId, periodStart])
+  @@index([payoutStatus])
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  subject     String
+  description String         @db.Text
+  status      TicketStatus   @default(OPEN)
+  category    TicketCategory @default(GENERAL_INQUIRY)
+  priority    TicketPriority @default(MEDIUM)
+
+  // Preserve the AI suggestion separately from the final admin-controlled value.
+  aiSuggestedCategory  TicketCategory?
+  aiSuggestedPriority  TicketPriority?
+  aiClassificationNote String?         @db.Text
+  aiModel              String?
+  aiDraftResponse      String?         @db.Text
+  aiDraftGeneratedAt   DateTime?
+  aiDraftEdited        Boolean         @default(false)
+
+  authorId     String
+  bookId       String?
+  assignedToId String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  author        User                 @relation("TicketAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  book          Book?                @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  assignedTo    User?                @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  replies       TicketReply[]
+  internalNotes TicketInternalNote[]
+
+  @@index([authorId, createdAt])
+  @@index([status, priority, createdAt])
+  @@index([category])
+  @@index([assignedToId, status])
+}
+
+model TicketReply {
+  id         String          @id @default(cuid())
+  ticketId   String
+  senderId   String
+  message    String          @db.Text
+  senderType ReplySenderType
+  createdAt  DateTime        @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+}
+
+model TicketInternalNote {
+  id        String   @id @default(cuid())
+  ticketId  String
+  authorId  String
+  note      String   @db.Text
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+}
