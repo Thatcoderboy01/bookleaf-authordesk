@@ -7,6 +7,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import { authenticate } from "./middleware/authenticate.js";
 import { authorizeRole } from "./middleware/authorize-role.js";
 import bookRoutes from "./modules/books/book.routes.js";
+import ticketRoutes from "./modules/tickets/ticket.routes.js";
 
 
 const app = express();
@@ -48,8 +49,8 @@ app.get("/api/health", (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
-
 app.use("/api/books", bookRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 
 // Unknown routes return a consistent 404 response.
