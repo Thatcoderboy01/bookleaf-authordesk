@@ -6,6 +6,7 @@ import errorHandler from "./middleware/error-handler.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import { authenticate } from "./middleware/authenticate.js";
 import { authorizeRole } from "./middleware/authorize-role.js";
+import bookRoutes from "./modules/books/book.routes.js";
 
 
 const app = express();
@@ -32,21 +33,23 @@ app.get("/api/health", (req, res) => {
 });
 
 // Temp Test
-app.get("/api/test/me", authenticate, (req, res) => {
-  res.json({ success: true, user: req.user });
-});
+// app.get("/api/test/me", authenticate, (req, res) => {
+//   res.json({ success: true, user: req.user });
+// });
 
-app.get(
-  "/api/test/admin",
-  authenticate,
-  authorizeRole("ADMIN"),
-  (req, res) => {
-    res.json({ success: true, message: "Admin access granted" });
-  }
-);
+// app.get(
+//   "/api/test/admin",
+//   authenticate,
+//   authorizeRole("ADMIN"),
+//   (req, res) => {
+//     res.json({ success: true, message: "Admin access granted" });
+//   }
+// );
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
+
+app.use("/api/books", bookRoutes);
 
 
 // Unknown routes return a consistent 404 response.
