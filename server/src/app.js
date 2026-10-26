@@ -3,6 +3,10 @@ import cors from "cors";
 import { env } from "./config/env.js";
 import notFound from "./middleware/not-found.js";
 import errorHandler from "./middleware/error-handler.js";
+import authRoutes from "./modules/auth/auth.routes.js";
+import { authenticate } from "./middleware/authenticate.js";
+import { authorizeRole } from "./middleware/authorize-role.js";
+
 
 const app = express();
 
@@ -26,6 +30,24 @@ app.get("/api/health", (req, res) => {
     environment: env.nodeEnv,
   });
 });
+
+// Temp Test
+app.get("/api/test/me", authenticate, (req, res) => {
+  res.json({ success: true, user: req.user });
+});
+
+app.get(
+  "/api/test/admin",
+  authenticate,
+  authorizeRole("ADMIN"),
+  (req, res) => {
+    res.json({ success: true, message: "Admin access granted" });
+  }
+);
+
+// Authentication routes
+app.use("/api/auth", authRoutes);
+
 
 // Unknown routes return a consistent 404 response.
 app.use(notFound);
