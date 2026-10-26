@@ -10,6 +10,7 @@ import {
   getInternalNotes,
 } from "./ticket.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { listTicketsQuerySchema } from "./ticket.validation.js";
 
 export async function createTicketController(req, res, next) {
   try {
@@ -23,17 +24,26 @@ export async function createTicketController(req, res, next) {
   }
 }
 
+
 export async function listTickets(req, res, next) {
   try {
-    const tickets = await getTickets(req.user);
+    const filters = listTicketsQuerySchema.parse(req.query);
+    const result = await getTickets(req.user, filters);
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { tickets }, "Tickets fetched successfully"));
+      .json(
+        new ApiResponse(
+          200,
+          result,
+          "Tickets fetched successfully"
+        )
+      );
   } catch (error) {
     next(error);
   }
 }
+
 
 export async function getTicketDetails(req, res, next) {
   try {

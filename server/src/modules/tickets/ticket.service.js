@@ -47,29 +47,83 @@ export async function createTicket(user, input) {
   });
 }
 
-export async function getTickets(user) {
-  const where = user.role === "ADMIN"
-    ? {}
-    : { authorId: user.id };
 
-  return prisma.ticket.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      subject: true,
-      description: true,
-      status: true,
-      category: true,
-      priority: true,
-      authorId: true,
-      bookId: true,
-      assignedToId: true,
-      createdAt: true,
-      updatedAt: true,
+export async function getTickets(user, filters = {}) {
+  const {
+    status,
+    category,
+    priority,
+    from,
+    to,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    page = 1,
+    limit = 10,
+  } = filters;
+
+  // Always restrict authors to their own tickets.
+  const where = {
+    ...(user.role === "ADMIN" ? {} : { authorId: user.id }),
+    ...(status ? { status } : {}),
+    ...(category ? { category } : {}),
+    ...(priority ? { priority } : {}),
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: new Date(`${from}T00:00:00.000Z`) } : {}),
+            ...(to
+              ? {
+                  lt: new Date(
+                    new Date(`${to}T00:00:00.000Z`).getTime() +
+                      24 * 60 * 60 * 1000
+                  ),
+                }
+              : {}),
+          },
+        }
+      : {}),
+  };
+
+  const orderBy = {
+    [sortBy]: sortOrder,
+  };
+
+  const skip = (page - 1) * limit;
+
+  const [tickets, total] = await prisma.$transaction([
+    prisma.ticket.findMany({
+      where,
+      orderBy,
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        subject: true,
+        description: true,
+        status: true,
+        category: true,
+        priority: true,
+        authorId: true,
+        bookId: true,
+        assignedToId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.ticket.count({ where }),
+  ]);
+
+  return {
+    tickets,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
-  });
+  };
 }
+
 
 export async function getTicketById(ticketId, user) {
   const ticket = await prisma.ticket.findUnique({

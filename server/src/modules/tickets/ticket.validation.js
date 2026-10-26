@@ -67,3 +67,62 @@ export const createInternalNoteSchema = z.object({
     .min(1, "Internal note is required")
     .max(5000, "Internal note must not exceed 5000 characters"),
 });
+
+
+export const listTicketsQuerySchema = z.object({
+  status: z
+    .enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"])
+    .optional(),
+
+  category: z
+    .enum([
+      "ROYALTY_PAYMENTS",
+      "ISBN_METADATA_ISSUES",
+      "PRINTING_QUALITY",
+      "DISTRIBUTION_AVAILABILITY",
+      "BOOK_STATUS_PRODUCTION",
+      "GENERAL_INQUIRY",
+    ])
+    .optional(),
+
+  priority: z
+    .enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"])
+    .optional(),
+
+  from: z
+    .string()
+    .date("from must be a valid date in YYYY-MM-DD format")
+    .optional(),
+
+  to: z
+    .string()
+    .date("to must be a valid date in YYYY-MM-DD format")
+    .optional(),
+
+  sortBy: z
+    .enum(["createdAt", "updatedAt", "priority"])
+    .default("createdAt"),
+
+  sortOrder: z
+    .enum(["asc", "desc"])
+    .default("desc"),
+
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .default(1),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(10),
+}).refine(
+  (data) => !data.from || !data.to || data.from <= data.to,
+  {
+    message: "'from' date must not be later than 'to' date",
+    path: ["from"],
+  }
+);
