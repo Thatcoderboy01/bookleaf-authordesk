@@ -1,8 +1,80 @@
 
 import prisma from "../../config/database.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { classifyTicket } from "../ai/classification.service.js";
+
+
+export async function generateTicketDraft(ticketId) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      subject: true,
+      description: true,
+      category: true,
+      aiSuggestedCategory: true,
+      priority: true,
+    },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  let result;
+
+  try {
+    const { generateTicketResponse } = await import(
+      "../ai/response-generation.service.js"
+    );
+
+    result = await generateTicketResponse(ticket);
+  } catch (error) {
+    console.error("AI ticket draft generation failed:", error.message);
+
+    throw new ApiError(
+      502,
+      "Unable to generate an AI draft right now. Please try again."
+    );
+  }
+
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: {
+      aiDraftResponse: result.draft,
+      aiDraftGeneratedAt: new Date(),
+      aiDraftEdited: false,
+      aiModel: process.env.GEMINI_MODEL || "gemini-3.6-flash",
+    },
+    select: {
+      id: true,
+      subject: true,
+      aiDraftResponse: true,
+      aiDraftGeneratedAt: true,
+      aiDraftEdited: true,
+      aiModel: true,
+    },
+  });
+}
 
 export async function createTicket(user, input) {
+  // Resolve and validate the ticket author.
+  const authorId =
+    user.role === "ADMIN" && input.authorId
+      ? input.authorId
+      : user.id;
+
+  if (user.role === "ADMIN" && input.authorId) {
+    const author = await prisma.user.findUnique({
+      where: { id: authorId },
+      select: { id: true, role: true },
+    });
+
+    if (!author || author.role !== "AUTHOR") {
+      throw new ApiError(400, "Ticket author must be an existing author");
+    }
+  }
+
   // If a book is supplied, verify that it exists and belongs to the author.
   if (input.bookId) {
     const book = await prisma.book.findUnique({
@@ -10,25 +82,39 @@ export async function createTicket(user, input) {
       select: { id: true, authorId: true },
     });
 
-    if (!book) {
+    if (!book || book.authorId !== authorId) {
       throw new ApiError(404, "Book not found");
     }
+  }
 
-    if (user.role !== "ADMIN" && book.authorId !== user.id) {
-      throw new ApiError(404, "Book not found");
-    }
+  // AI provides suggestions only. Ticket creation must survive AI failures.
+  let classification = null;
+
+  try {
+    classification = await classifyTicket({
+      subject: input.subject,
+      description: input.description,
+    });
+  } catch (error) {
+    console.error("AI ticket classification failed:", error.message);
   }
 
   return prisma.ticket.create({
     data: {
       subject: input.subject,
       description: input.description,
-      authorId: user.role === "ADMIN" && input.authorId
-        ? input.authorId
-        : user.id,
+      authorId,
       bookId: input.bookId || null,
       ...(user.role === "ADMIN" && input.assignedToId
         ? { assignedToId: input.assignedToId }
+        : {}),
+      ...(classification
+        ? {
+            aiSuggestedCategory: classification.category,
+            aiSuggestedPriority: classification.priority,
+            aiClassificationNote: classification.reasoning,
+            aiModel: process.env.GEMINI_MODEL || "gemini-3.6-flash",
+          }
         : {}),
     },
     select: {
@@ -38,6 +124,10 @@ export async function createTicket(user, input) {
       status: true,
       category: true,
       priority: true,
+      aiSuggestedCategory: true,
+      aiSuggestedPriority: true,
+      aiClassificationNote: true,
+      aiModel: true,
       authorId: true,
       bookId: true,
       assignedToId: true,
@@ -46,6 +136,7 @@ export async function createTicket(user, input) {
     },
   });
 }
+
 
 
 export async function getTickets(user, filters = {}) {
@@ -323,6 +414,35 @@ export async function getInternalNotes(ticketId) {
       authorId: true,
       note: true,
       createdAt: true,
+    },
+  });
+}
+
+
+export async function updateTicketDraft(ticketId, draft) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: {
+      aiDraftResponse: draft,
+      aiDraftEdited: true,
+    },
+    select: {
+      id: true,
+      subject: true,
+      aiDraftResponse: true,
+      aiDraftGeneratedAt: true,
+      aiDraftEdited: true,
+      aiModel: true,
+      updatedAt: true,
     },
   });
 }

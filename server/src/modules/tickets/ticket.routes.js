@@ -13,6 +13,8 @@ import {
   listTicketRepliesController,
   createInternalNoteController,
   listInternalNotesController,
+  generateTicketDraftController,
+  updateTicketDraftController,
 } from "./ticket.controller.js";
 
 import {
@@ -20,6 +22,7 @@ import {
   updateTicketSchema,
   createReplySchema,
   createInternalNoteSchema,
+  updateTicketDraftSchema,
 } from "./ticket.validation.js";
 
 const router = Router();
@@ -64,6 +67,20 @@ router.get(
   listInternalNotesController
 );
 
+// Only admins can generate AI ticket drafts.
+router.post(
+  "/:id/ai-draft",
+  authorizeRole("ADMIN"),
+  generateTicketDraftController
+);
+
+// Only admins can edit AI ticket drafts.
+router.patch(
+  "/:id/ai-draft",
+  authorizeRole("ADMIN"),
+  validateRequest(updateTicketDraftSchema),
+  updateTicketDraftController
+);
 
 // Only admins can update tickets.
 router.patch(

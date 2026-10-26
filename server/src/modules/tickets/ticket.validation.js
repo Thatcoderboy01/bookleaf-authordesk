@@ -126,3 +126,8 @@ export const listTicketsQuerySchema = z.object({
     path: ["from"],
   }
 );
+
+
+export const updateTicketDraftSchema = z.object({
+  draft: z.string().trim().min(20).max(5000),
+});

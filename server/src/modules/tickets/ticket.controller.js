@@ -8,6 +8,8 @@ import {
   getTicketReplies,
   createInternalNote,
   getInternalNotes,
+  generateTicketDraft,
+  updateTicketDraft,
 } from "./ticket.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { listTicketsQuerySchema } from "./ticket.validation.js";
@@ -139,6 +141,43 @@ export async function listInternalNotesController(req, res, next) {
           200,
           { internalNotes },
           "Internal notes fetched successfully"
+        )
+      );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function generateTicketDraftController(req, res, next) {
+  try {
+    const draft = await generateTicketDraft(req.params.id);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { draft },
+          "AI ticket draft generated successfully"
+        )
+      );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateTicketDraftController(req, res, next) {
+  try {
+    const { draft } = req.body;
+    const updatedDraft = await updateTicketDraft(req.params.id, draft);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { draft: updatedDraft },
+          "AI ticket draft updated successfully"
         )
       );
   } catch (error) {
