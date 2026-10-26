@@ -50,3 +50,20 @@ export const updateTicketSchema = z
     (data) => Object.keys(data).length > 0,
     { message: "At least one field must be provided" }
   );
+
+
+export const createReplySchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(1, "Reply message is required")
+    .max(5000, "Reply must not exceed 5000 characters"),
+});
+
+export const createInternalNoteSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .min(1, "Internal note is required")
+    .max(5000, "Internal note must not exceed 5000 characters"),
+});

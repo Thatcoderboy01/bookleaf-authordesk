@@ -153,3 +153,122 @@ export async function updateTicket(ticketId, input) {
     },
   });
 }
+
+
+export async function createTicketReply(ticketId, user, input) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  // Authors can reply only to their own tickets.
+  if (user.role !== "ADMIN" && ticket.authorId !== user.id) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  return prisma.ticketReply.create({
+    data: {
+      ticketId: ticket.id,
+      senderId: user.id,
+      senderType: user.role === "ADMIN" ? "ADMIN" : "AUTHOR",
+      message: input.message,
+    },
+    select: {
+      id: true,
+      ticketId: true,
+      senderId: true,
+      senderType: true,
+      message: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function getTicketReplies(ticketId, user) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  // Authors can view replies only on their own tickets.
+  if (user.role !== "ADMIN" && ticket.authorId !== user.id) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  return prisma.ticketReply.findMany({
+    where: { ticketId: ticket.id },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      ticketId: true,
+      senderId: true,
+      senderType: true,
+      message: true,
+      createdAt: true,
+    },
+  });
+}
+
+
+export async function createInternalNote(ticketId, user, input) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  return prisma.ticketInternalNote.create({
+    data: {
+      ticketId: ticket.id,
+      authorId: user.id,
+      note: input.note,
+    },
+    select: {
+      id: true,
+      ticketId: true,
+      authorId: true,
+      note: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function getInternalNotes(ticketId) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  return prisma.ticketInternalNote.findMany({
+    where: { ticketId: ticket.id },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      ticketId: true,
+      authorId: true,
+      note: true,
+      createdAt: true,
+    },
+  });
+}
