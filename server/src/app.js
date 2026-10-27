@@ -9,6 +9,7 @@ import { authorizeRole } from "./middleware/authorize-role.js";
 import bookRoutes from "./modules/books/book.routes.js";
 import ticketRoutes from "./modules/tickets/ticket.routes.js";
 import royaltyRoutes from "./modules/royalties/royalty.routes.js";
+import { setupSwagger } from "./docs/swagger.js";
 
 
 const app = express();
@@ -24,6 +25,34 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+
+/**
+ * @openapi
+ * /api/health:
+ *   get:
+ *     tags:
+ *       - Health
+ *     summary: Check API health
+ *     responses:
+ *       '200':
+ *         description: API is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: BookLeaf AuthorDesk API is running
+ *                 environment:
+ *                   type: string
+ *                   example: development
+ */
+
 
 // Health check endpoint.
 app.get("/api/health", (req, res) => {
@@ -54,6 +83,7 @@ app.use("/api/books", bookRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/royalties", royaltyRoutes);
 
+setupSwagger(app);
 
 // Unknown routes return a consistent 404 response.
 app.use(notFound);
