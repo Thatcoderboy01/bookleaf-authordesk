@@ -28,7 +28,7 @@ export default function Sidebar({ navigation, user, logout }) {
           <span className="help-icon">✳</span>
           <strong>Need some help?</strong>
           <p>Our support team is here for you.</p>
-          <a href="#/tickets">Contact support <span>↗</span></a>
+          <a href={user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets"}>Contact support <span>↗</span></a>
         </div>
         <div className="profile">
           <div className="avatar">{user.name.slice(0, 2).toUpperCase()}</div>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import LoginPage from "./features/auth/pages/LoginPage.jsx";
 import AdminLayout from "./components/layout/AdminLayout.jsx";
 import AuthorLayout from "./components/layout/AuthorLayout.jsx";
@@ -9,42 +10,8 @@ import MyTicketsPage from "./features/tickets/pages/MyTicketsPage.jsx";
 import TicketDetailsPage from "./features/tickets/pages/TicketDetailsPage.jsx";
 import AdminTicketQueuePage from "./features/tickets/pages/AdminTicketQueuePage.jsx";
 import AdminTicketDetailsPage from "./features/tickets/pages/AdminTicketDetailsPage.jsx";
+import { getTickets } from "./features/tickets/tickets.api.js";
 import { useAuth } from "./hooks/useAuth.js";
-
-const tickets = [
-  {
-    id: 'TKT-1042',
-    subject: 'Royalty payment for September is missing',
-    category: 'Payments',
-    status: 'In Progress',
-    priority: 'High',
-    date: 'Oct 27, 2026',
-  },
-  {
-    id: 'TKT-1041',
-    subject: 'Need to update book cover',
-    category: 'Book Updates',
-    status: 'Open',
-    priority: 'Medium',
-    date: 'Oct 26, 2026',
-  },
-  {
-    id: 'TKT-1038',
-    subject: 'Correction required in author name',
-    category: 'Book Updates',
-    status: 'Resolved',
-    priority: 'Low',
-    date: 'Oct 24, 2026',
-  },
-  {
-    id: 'TKT-1035',
-    subject: 'Clarification regarding publishing charges',
-    category: 'General',
-    status: 'Resolved',
-    priority: 'Medium',
-    date: 'Oct 22, 2026',
-  },
-]
 
 const navigation = [
   { icon: '◫', label: 'Overview', path: routes.overview.path },
@@ -55,6 +22,9 @@ const navigation = [
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
+  const [overviewTickets, setOverviewTickets] = useState([]);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState("");
   const currentPath = useHashRoute();
   const currentRoute = getRouteByPath(currentPath);
   const bookId = currentPath.startsWith(`${routes.books.path}/`)
@@ -66,6 +36,29 @@ function App() {
   const adminTicketId = currentPath.startsWith(`${routes.adminTickets.path}/`)
     ? decodeURIComponent(currentPath.slice(`${routes.adminTickets.path}/`.length))
     : null;
+
+  useEffect(() => {
+    if (!isAuthenticated || currentRoute !== routes.overview) {
+      return undefined;
+    }
+
+    let isCurrent = true;
+    getTickets({ limit: 4, sortBy: "updatedAt", sortOrder: "desc" })
+      .then((data) => {
+        if (isCurrent) {
+          setOverviewTickets(data?.tickets || []);
+          setOverviewError("");
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) setOverviewError(error.message || "Unable to load ticket summary.");
+      })
+      .finally(() => {
+        if (isCurrent) setOverviewLoading(false);
+      });
+
+    return () => { isCurrent = false; };
+  }, [currentRoute, isAuthenticated]);
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -84,6 +77,15 @@ function App() {
     active: item.path === currentPath,
   }));
   const Layout = user.role === "ADMIN" ? AdminLayout : AuthorLayout;
+
+  const ticketCounts = overviewTickets.reduce((counts, ticket) => {
+    counts[ticket.status] = (counts[ticket.status] || 0) + 1;
+    return counts;
+  }, {});
+  const totalTickets = overviewTickets.length;
+  const openTickets = ticketCounts.OPEN || 0;
+  const inProgressTickets = ticketCounts.IN_PROGRESS || 0;
+  const resolvedTickets = (ticketCounts.RESOLVED || 0) + (ticketCounts.CLOSED || 0);
 
   return (
     <Layout
@@ -126,14 +128,14 @@ function App() {
           <section className="welcome-row">
             <div>
               <div className="eyebrow">MONDAY, OCTOBER 27, 2026</div>
-              <h1>Good afternoon, Test Author <span className="wave">✦</span></h1>
+              <h1>Good afternoon, {user.name} <span className="wave">✦</span></h1>
               <p className="welcome-description">
                 Here's what's happening with your books and support requests.
               </p>
             </div>
-            <button className="primary-button" type="button" onClick={() => window.alert('Ticket creation form is coming next.')}>
+            <a className="primary-button" href={user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets/new"}>
               <span>＋</span> Create a ticket
-            </button>
+            </a>
           </section>
 
           <section className="stats-grid" aria-label="Support overview">
@@ -142,15 +144,15 @@ function App() {
                 <span className="stat-label">Total tickets</span>
                 <span className="stat-icon purple">▤</span>
               </div>
-              <div className="stat-value">12</div>
-              <div className="stat-foot"><span className="stat-neutral">All time</span> support requests</div>
+              <div className="stat-value">{overviewLoading ? "—" : totalTickets}</div>
+              <div className="stat-foot"><span className="stat-neutral">Recent</span> support requests</div>
             </article>
             <article className="stat-card">
               <div className="stat-top">
                 <span className="stat-label">Open tickets</span>
                 <span className="stat-icon orange">◷</span>
               </div>
-              <div className="stat-value">2</div>
+              <div className="stat-value">{overviewLoading ? "—" : openTickets}</div>
               <div className="stat-foot"><span className="dot orange-dot" /> Awaiting a resolution</div>
             </article>
             <article className="stat-card">
@@ -158,7 +160,7 @@ function App() {
                 <span className="stat-label">In progress</span>
                 <span className="stat-icon blue">↗</span>
               </div>
-              <div className="stat-value">1</div>
+              <div className="stat-value">{overviewLoading ? "—" : inProgressTickets}</div>
               <div className="stat-foot"><span className="dot blue-dot" /> Being reviewed by support</div>
             </article>
             <article className="stat-card">
@@ -166,7 +168,7 @@ function App() {
                 <span className="stat-label">Resolved</span>
                 <span className="stat-icon green">✓</span>
               </div>
-              <div className="stat-value">9</div>
+              <div className="stat-value">{overviewLoading ? "—" : resolvedTickets}</div>
               <div className="stat-foot"><span className="dot green-dot" /> Successfully completed</div>
             </article>
           </section>
@@ -178,9 +180,9 @@ function App() {
                   <h2>Recent tickets</h2>
                   <p>Track and manage your support requests.</p>
                 </div>
-                <button className="text-button" type="button" onClick={() => window.alert('My Tickets page is coming next.')}>
+                <a className="text-button" href={user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets"}>
                   View all <span>→</span>
-                </button>
+                </a>
               </div>
 
               <div className="ticket-table-wrap">
@@ -195,15 +197,15 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tickets.map((ticket) => (
+                    {overviewTickets.map((ticket) => (
                       <tr key={ticket.id}>
                         <td>
                           <div className="ticket-subject">{ticket.subject}</div>
-                          <div className="ticket-meta">{ticket.id} <span>·</span> {ticket.category}</div>
+                          <div className="ticket-meta">{ticket.id} <span>·</span> {ticket.category.replaceAll("_", " ")}</div>
                         </td>
                         <td>
-                          <span className={`status-badge ${ticket.status.toLowerCase().replace(' ', '-')}`}>
-                            <span />{ticket.status}
+                          <span className={`status-badge ${ticket.status.toLowerCase().replace("_", "-")}`}>
+                          <span />{ticket.status.replaceAll("_", " ")}
                           </span>
                         </td>
                         <td>
@@ -211,16 +213,16 @@ function App() {
                             <span />{ticket.priority}
                           </span>
                         </td>
-                        <td className="ticket-date">{ticket.date}</td>
-                        <td><button className="row-menu" type="button" aria-label={`Open ${ticket.id}`} onClick={() => window.alert(`${ticket.id}: Ticket details will be connected next.`)}>↗</button></td>
+                        <td className="ticket-date">{new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(ticket.updatedAt))}</td>
+                        <td><a className="row-menu" href={`${user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets"}/${encodeURIComponent(ticket.id)}`} aria-label={`Open ${ticket.id}`}>↗</a></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <div className="table-footer">
-                <span>Showing 4 of 12 tickets</span>
-                <button type="button" onClick={() => window.alert('My Tickets page is coming next.')}>View all tickets →</button>
+                <span>{overviewError || `Showing ${overviewTickets.length} recent tickets`}</span>
+                <a href={user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets"}>View all tickets →</a>
               </div>
             </article>
 
@@ -229,21 +231,21 @@ function App() {
                 <div className="panel-heading compact">
                   <div><h2>Quick actions</h2><p>What would you like to do?</p></div>
                 </div>
-                <button className="quick-action" type="button" onClick={() => window.alert('Ticket creation form is coming next.')}>
+                <a className="quick-action" href={user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets/new"}>
                   <span className="quick-icon purple">＋</span>
                   <span className="quick-copy"><strong>Raise a new ticket</strong><small>Get help from our team</small></span>
                   <span className="quick-arrow">→</span>
-                </button>
-                <button className="quick-action" type="button" onClick={() => window.alert('My Books page is coming next.')}>
+                </a>
+                <a className="quick-action" href="#/books">
                   <span className="quick-icon blue">▧</span>
                   <span className="quick-copy"><strong>Explore my books</strong><small>View your published titles</small></span>
                   <span className="quick-arrow">→</span>
-                </button>
-                <button className="quick-action" type="button" onClick={() => window.alert('Royalties page is coming next.')}>
+                </a>
+                <a className="quick-action" href="#/royalties">
                   <span className="quick-icon green">₹</span>
                   <span className="quick-copy"><strong>Check royalties</strong><small>Review your earnings</small></span>
                   <span className="quick-arrow">→</span>
-                </button>
+                </a>
               </article>
 
               <article className="knowledge-card">
@@ -251,7 +253,7 @@ function App() {
                 <span className="knowledge-label">AUTHOR RESOURCES</span>
                 <h3>A little guidance goes a long way.</h3>
                 <p>Find answers to common questions about publishing, royalties, and your books.</p>
-                <button type="button" onClick={() => window.alert('Knowledge base links will be added soon.')}>Explore help center <span>↗</span></button>
+                <a href="#/tickets">Explore support options <span>↗</span></a>
               </article>
             </aside>
           </section>
