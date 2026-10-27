@@ -10,6 +10,7 @@ import {
   getInternalNotes,
   generateTicketDraft,
   updateTicketDraft,
+  sendTicketDraftAsReply,
 } from "./ticket.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { listTicketsQuerySchema } from "./ticket.validation.js";
@@ -178,6 +179,24 @@ export async function updateTicketDraftController(req, res, next) {
           200,
           { draft: updatedDraft },
           "AI ticket draft updated successfully"
+        )
+      );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function sendTicketDraftAsReplyController(req, res, next) {
+  try {
+    const reply = await sendTicketDraftAsReply(req.params.id, req.user);
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(
+          201,
+          { reply },
+          "AI draft sent as ticket reply successfully"
         )
       );
   } catch (error) {

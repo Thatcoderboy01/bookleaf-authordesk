@@ -446,3 +446,62 @@ export async function updateTicketDraft(ticketId, draft) {
     },
   });
 }
+
+
+
+export async function sendTicketDraftAsReply(ticketId, user) {
+  if (user.role !== "ADMIN") {
+    throw new ApiError(403, "Only admins can send AI ticket drafts");
+  }
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      aiDraftResponse: true,
+    },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  const draft = ticket.aiDraftResponse?.trim();
+
+  if (!draft) {
+    throw new ApiError(400, "No AI draft available to send");
+  }
+
+  const existingReply = await prisma.ticketReply.findFirst({
+    where: {
+      ticketId: ticket.id,
+      senderType: "ADMIN",
+      message: draft,
+    },
+    select: { id: true },
+  });
+
+  if (existingReply) {
+    throw new ApiError(
+      409,
+      "This AI draft has already been sent as a reply"
+    );
+  }
+
+  return prisma.ticketReply.create({
+    data: {
+      ticketId: ticket.id,
+      senderId: user.id,
+      senderType: "ADMIN",
+      message: draft,
+    },
+    select: {
+      id: true,
+      ticketId: true,
+      senderId: true,
+      senderType: true,
+      message: true,
+      createdAt: true,
+    },
+  });
+}

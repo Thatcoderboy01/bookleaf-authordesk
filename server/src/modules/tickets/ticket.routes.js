@@ -15,6 +15,7 @@ import {
   listInternalNotesController,
   generateTicketDraftController,
   updateTicketDraftController,
+  sendTicketDraftAsReplyController,
 } from "./ticket.controller.js";
 
 import {
@@ -80,6 +81,13 @@ router.patch(
   authorizeRole("ADMIN"),
   validateRequest(updateTicketDraftSchema),
   updateTicketDraftController
+);
+
+// Only admins can send the saved AI draft as a ticket reply.
+router.post(
+  "/:id/ai-draft/send",
+  authorizeRole("ADMIN"),
+  sendTicketDraftAsReplyController
 );
 
 // Only admins can update tickets.
