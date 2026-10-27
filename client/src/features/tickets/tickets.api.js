@@ -50,6 +50,14 @@ export async function updateTicket(ticketId, input) {
   return data?.ticket || null;
 }
 
+export async function assignTicketToSelf(ticketId) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/assign-to-me`, {
+    method: "POST",
+  });
+
+  return data?.ticket || null;
+}
+
 export async function getInternalNotes(ticketId) {
   const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/internal-notes`);
   return data?.internalNotes || [];

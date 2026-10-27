@@ -9,6 +9,7 @@ import {
   listTickets,
   getTicketDetails,
   updateTicketController,
+  assignTicketToSelfController,
   createTicketReplyController,
   listTicketRepliesController,
   createInternalNoteController,
@@ -166,6 +167,25 @@ import {
  *     responses:
  *       '200':
  *         description: Ticket updated successfully
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Admin role required
+ *       '404':
+ *         description: Ticket not found
+ *
+ * /api/tickets/{id}/assign-to-me:
+ *   post:
+ *     tags:
+ *       - Tickets
+ *     summary: Assign a ticket to the authenticated admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/TicketId'
+ *     responses:
+ *       '200':
+ *         description: Ticket assigned successfully
  *       '401':
  *         description: Authentication required
  *       '403':
@@ -344,6 +364,11 @@ router.get("/", listTickets);
 
 // Get a single ticket.
 router.get("/:id", getTicketDetails);
+router.post(
+  "/:id/assign-to-me",
+  authorizeRole("ADMIN"),
+  assignTicketToSelfController
+);
 router.post(
   "/:id/replies",
   validateRequest(createReplySchema),

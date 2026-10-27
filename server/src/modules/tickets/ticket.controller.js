@@ -4,6 +4,7 @@ import {
   getTickets,
   getTicketById,
   updateTicket,
+  assignTicketToSelf,
   createTicketReply,
   getTicketReplies,
   createInternalNote,
@@ -69,6 +70,24 @@ export async function updateTicketController(req, res, next) {
       .status(200)
       .json(
         new ApiResponse(200, { ticket }, "Ticket updated successfully")
+      );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function assignTicketToSelfController(req, res, next) {
+  try {
+    const ticket = await assignTicketToSelf(req.params.id, req.user);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { ticket },
+          "Ticket assigned successfully"
+        )
       );
   } catch (error) {
     next(error);

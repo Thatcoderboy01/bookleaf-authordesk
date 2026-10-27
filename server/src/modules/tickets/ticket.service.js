@@ -125,10 +125,14 @@ export async function createTicket(user, input) {
       status: true,
       category: true,
       priority: true,
-      aiSuggestedCategory: true,
-      aiSuggestedPriority: true,
-      aiClassificationNote: true,
-      aiModel: true,
+      ...(user.role === "ADMIN"
+        ? {
+            aiSuggestedCategory: true,
+            aiSuggestedPriority: true,
+            aiClassificationNote: true,
+            aiModel: true,
+          }
+        : {}),
       authorId: true,
       bookId: true,
       assignedToId: true,
@@ -195,6 +199,13 @@ export async function getTickets(user, filters = {}) {
         status: true,
         category: true,
         priority: true,
+        ...(user.role === "ADMIN"
+          ? {
+              aiSuggestedCategory: true,
+              aiSuggestedPriority: true,
+              aiClassificationNote: true,
+            }
+          : {}),
         authorId: true,
         bookId: true,
         assignedToId: true,
@@ -227,6 +238,13 @@ export async function getTicketById(ticketId, user) {
       status: true,
       category: true,
       priority: true,
+      ...(user.role === "ADMIN"
+        ? {
+            aiSuggestedCategory: true,
+            aiSuggestedPriority: true,
+            aiClassificationNote: true,
+          }
+        : {}),
       authorId: true,
       bookId: true,
       assignedToId: true,
@@ -301,6 +319,30 @@ export async function updateTicket(ticketId, input) {
   });
 }
 
+export async function assignTicketToSelf(ticketId, user) {
+  if (user.role !== "ADMIN") {
+    throw new ApiError(403, "Only admins can assign tickets");
+  }
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true },
+  });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: { assignedToId: user.id },
+    select: {
+      id: true,
+      assignedToId: true,
+      updatedAt: true,
+    },
+  });
+}
 
 export async function createTicketReply(ticketId, user, input) {
   const ticket = await prisma.ticket.findUnique({

@@ -4,6 +4,7 @@ import AiResponseDraft from "../components/AiResponseDraft.jsx";
 import {
   createInternalNote,
   createTicketReply,
+  assignTicketToSelf,
   getInternalNotes,
   getTicketById,
   getTicketReplies,
@@ -33,6 +34,7 @@ export default function AdminTicketDetailsPage({ ticketId }) {
   const [note, setNote] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
 
@@ -69,6 +71,19 @@ export default function AdminTicketDetailsPage({ ticketId }) {
       setActionError(requestError.message || "Unable to update the ticket.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleAssignToSelf() {
+    setIsAssigning(true);
+    setActionError("");
+    try {
+      const updatedTicket = await assignTicketToSelf(ticketId);
+      setTicket((current) => ({ ...current, ...updatedTicket }));
+    } catch (requestError) {
+      setActionError(requestError.message || "Unable to assign the ticket.");
+    } finally {
+      setIsAssigning(false);
     }
   }
 
@@ -123,6 +138,11 @@ export default function AdminTicketDetailsPage({ ticketId }) {
       <section className="admin-ticket-layout">
         <article className="panel admin-controls">
           <div className="panel-heading"><div><h2>Ticket controls</h2><p>Update classification and status.</p></div></div>
+          <div className="assignment-control">
+            <span className="control-label">Assignment</span>
+            <span className="assignment-value">{ticket.assignedToId ? "Assigned" : "Unassigned"}</span>
+            <button className="secondary-button" disabled={isAssigning} onClick={handleAssignToSelf} type="button">{isAssigning ? "Assigning..." : "Assign to me"}</button>
+          </div>
           <label>Status<select disabled={isSaving} name="status" onChange={handleTicketUpdate} value={ticket.status}>{statuses.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
           <label>Category<select disabled={isSaving} name="category" onChange={handleTicketUpdate} value={ticket.category}>{categories.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
           <label>Priority<select disabled={isSaving} name="priority" onChange={handleTicketUpdate} value={ticket.priority}>{priorities.map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label>
@@ -132,6 +152,18 @@ export default function AdminTicketDetailsPage({ ticketId }) {
           <TicketConversation replies={replies} />
           <form className="reply-form" onSubmit={handleReplySubmit}><label htmlFor="admin-reply">Reply to author</label><textarea id="admin-reply" onChange={(event) => setReply(event.target.value)} rows="4" value={reply} /><div className="reply-form-footer"><span>{reply.length}/5000</span><button className="primary-button" disabled={isSaving} type="submit">Send reply</button></div></form>
         </article>
+      </section>
+      <section className="panel ai-classification-panel">
+        <div className="panel-heading"><div><h2>AI classification suggestion</h2><p>Saved recommendation for admin review; final values remain editable above.</p></div></div>
+        {ticket.aiSuggestedCategory || ticket.aiSuggestedPriority || ticket.aiClassificationNote ? (
+          <div className="ai-classification-content">
+            <div><span className="classification-label">Suggested category</span><strong>{ticket.aiSuggestedCategory ? label(ticket.aiSuggestedCategory) : "Not available"}</strong></div>
+            <div><span className="classification-label">Suggested priority</span><strong>{ticket.aiSuggestedPriority ? label(ticket.aiSuggestedPriority) : "Not available"}</strong></div>
+            <div className="classification-note"><span className="classification-label">Reasoning</span><p>{ticket.aiClassificationNote || "No reasoning was saved."}</p></div>
+          </div>
+        ) : (
+          <p className="ai-classification-empty">No AI classification is available. The ticket can still be classified manually.</p>
+        )}
       </section>
       <AiResponseDraft ticketId={ticketId} onReplySent={(createdReply) => setReplies((current) => [...current, createdReply])} />
       <section className="panel internal-notes-panel">
