@@ -6,6 +6,7 @@ const initialForm = { subject: "", description: "", bookId: "" };
 
 export default function CreateTicketPage({ onCreated }) {
   const [form, setForm] = useState(initialForm);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [books, setBooks] = useState([]);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
@@ -20,6 +21,21 @@ export default function CreateTicketPage({ onCreated }) {
     setForm((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: "" }));
     setSubmitError("");
+  }
+
+  function handleFileChange(event) {
+    setSelectedFile(event.target.files?.[0] || null);
+    setSubmitError("");
+  }
+
+  function removeSelectedFile() {
+    setSelectedFile(null);
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   function validate() {
@@ -65,6 +81,17 @@ export default function CreateTicketPage({ onCreated }) {
         <label>Related book (optional)<select name="bookId" onChange={handleChange} value={form.bookId}><option value="">No specific book</option>{books.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}</select></label>
         <label>Description<textarea name="description" maxLength="5000" onChange={handleChange} rows="8" value={form.description} /></label>
         {errors.description && <span className="field-error">{errors.description}</span>}
+        <label>
+          Attachment (optional)
+          <input onChange={handleFileChange} type="file" />
+        </label>
+        <p className="form-help">Attachment selection is for UI demonstration only and is not uploaded or attached to the submitted ticket.</p>
+        {selectedFile && (
+          <div className="selected-file">
+            <span>{selectedFile.name} · {formatFileSize(selectedFile.size)}</span>
+            <button className="text-button" onClick={removeSelectedFile} type="button">Remove</button>
+          </div>
+        )}
         <div className="ticket-form-actions"><a className="text-button" href="#/tickets">Cancel</a><button className="primary-button" disabled={isSubmitting} type="submit">{isSubmitting ? "Submitting..." : "Submit ticket"}</button></div>
       </form>
     </div>
