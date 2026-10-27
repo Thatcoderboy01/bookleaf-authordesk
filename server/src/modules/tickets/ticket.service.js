@@ -231,6 +231,7 @@ export async function getTicketById(ticketId, user) {
       assignedToId: true,
       createdAt: true,
       updatedAt: true,
+      resolvedAt: true,
     },
   });
 
