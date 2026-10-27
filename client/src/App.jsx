@@ -3,6 +3,7 @@ import AdminLayout from "./components/layout/AdminLayout.jsx";
 import AuthorLayout from "./components/layout/AuthorLayout.jsx";
 import { getRouteByPath, routes, useHashRoute } from "./app/router.jsx";
 import MyBooksPage from "./features/books/pages/MyBooksPage.jsx";
+import MyRoyaltiesPage from "./features/royalties/pages/MyRoyaltiesPage.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
 const tickets = [
@@ -90,6 +91,8 @@ function App() {
           </section>
         ) : currentRoute === routes.books ? (
           <MyBooksPage bookId={bookId} />
+        ) : currentRoute === routes.royalties ? (
+          <MyRoyaltiesPage />
         ) : currentRoute !== routes.overview ? (
           <section className="empty-state" aria-live="polite">
             <span className="eyebrow">COMING NEXT</span>
