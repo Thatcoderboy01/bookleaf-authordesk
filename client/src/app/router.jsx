@@ -29,6 +29,9 @@ export function getRouteByPath(path) {
   if (path.startsWith(`${routes.books.path}/`)) {
     return routes.books;
   }
+  if (path === "#/tickets/new") {
+    return routes.tickets;
+  }
 
   return Object.values(routes).find((route) => route.path === path) || null;
 }

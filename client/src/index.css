@@ -249,6 +249,23 @@ h1, h2, h3, h4 {
 .royalty-table td { color: #7d879b; font-size: 10px; white-space: nowrap; }
 .royalty-table td strong { color: #30394d; font-size: 10px; }
 .table-empty-state { color: var(--muted); font-size: 12px; padding: 34px 20px; text-align: center; }
+.ticket-filters { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 16px; }
+.ticket-filters label, .ticket-form label { color: var(--text); display: grid; font-size: 11px; font-weight: 600; gap: 6px; }
+.ticket-filters select, .ticket-filters input, .ticket-form input, .ticket-form select, .ticket-form textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--text); min-height: 38px; outline: none; padding: 0 10px; }
+.ticket-form textarea { padding: 10px; resize: vertical; }
+.ticket-filters select, .ticket-filters input { min-width: 130px; }
+.ticket-list { display: grid; gap: 12px; }
+.author-ticket-card { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; display: flex; justify-content: space-between; padding: 18px 20px; transition: border-color .15s ease, transform .15s ease; }
+.author-ticket-card:hover { border-color: #b9b5f7; transform: translateY(-1px); }
+.author-ticket-card h2 { font-size: 14px; margin: 3px 0 6px; }
+.author-ticket-card p { color: var(--muted); font-size: 10px; margin: 0; }
+.author-ticket-meta { align-items: flex-end; display: flex; flex-direction: column; gap: 8px; }
+.ticket-form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 8px; max-width: 720px; padding: 24px; }
+.ticket-form input, .ticket-form select, .ticket-form textarea { width: 100%; }
+.ticket-form-actions { align-items: center; display: flex; justify-content: flex-end; gap: 18px; margin-top: 12px; }
+.pagination { align-items: center; display: flex; gap: 16px; justify-content: center; padding: 24px 0; }
+.pagination button { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--primary); font-size: 11px; padding: 8px 12px; }
+.pagination span { color: var(--muted); font-size: 11px; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-bottom: 24px; }
 .stat-card { min-width: 0; padding: 19px 19px 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 2px 5px #17203304; }
 .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

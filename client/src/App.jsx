@@ -4,6 +4,8 @@ import AuthorLayout from "./components/layout/AuthorLayout.jsx";
 import { getRouteByPath, routes, useHashRoute } from "./app/router.jsx";
 import MyBooksPage from "./features/books/pages/MyBooksPage.jsx";
 import MyRoyaltiesPage from "./features/royalties/pages/MyRoyaltiesPage.jsx";
+import CreateTicketPage from "./features/tickets/pages/CreateTicketPage.jsx";
+import MyTicketsPage from "./features/tickets/pages/MyTicketsPage.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
 const tickets = [
@@ -93,6 +95,10 @@ function App() {
           <MyBooksPage bookId={bookId} />
         ) : currentRoute === routes.royalties ? (
           <MyRoyaltiesPage />
+        ) : currentRoute === routes.tickets ? (
+          currentPath === "#/tickets/new"
+            ? <CreateTicketPage onCreated={() => { window.location.hash = "#/tickets"; }} />
+            : <MyTicketsPage />
         ) : currentRoute !== routes.overview ? (
           <section className="empty-state" aria-live="polite">
             <span className="eyebrow">COMING NEXT</span>
