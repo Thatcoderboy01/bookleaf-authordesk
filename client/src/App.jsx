@@ -2,6 +2,7 @@ import LoginPage from "./features/auth/pages/LoginPage.jsx";
 import AdminLayout from "./components/layout/AdminLayout.jsx";
 import AuthorLayout from "./components/layout/AuthorLayout.jsx";
 import { getRouteByPath, routes, useHashRoute } from "./app/router.jsx";
+import MyBooksPage from "./features/books/pages/MyBooksPage.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
 const tickets = [
@@ -50,6 +51,9 @@ function App() {
   const { isAuthenticated, logout, user } = useAuth();
   const currentPath = useHashRoute();
   const currentRoute = getRouteByPath(currentPath);
+  const bookId = currentPath.startsWith(`${routes.books.path}/`)
+    ? decodeURIComponent(currentPath.slice(`${routes.books.path}/`.length))
+    : null;
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -84,6 +88,8 @@ function App() {
             <p>Use the navigation available for your account to continue.</p>
             <a className="primary-button" href="#/">Return to overview</a>
           </section>
+        ) : currentRoute === routes.books ? (
+          <MyBooksPage bookId={bookId} />
         ) : currentRoute !== routes.overview ? (
           <section className="empty-state" aria-live="polite">
             <span className="eyebrow">COMING NEXT</span>

@@ -26,5 +26,9 @@ export function useHashRoute() {
 }
 
 export function getRouteByPath(path) {
+  if (path.startsWith(`${routes.books.path}/`)) {
+    return routes.books;
+  }
+
   return Object.values(routes).find((route) => route.path === path) || null;
 }
