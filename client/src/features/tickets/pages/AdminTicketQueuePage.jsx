@@ -23,19 +23,36 @@ export default function AdminTicketQueuePage() {
 
   useEffect(() => {
     let isCurrent = true;
+    let isRequestInFlight = false;
+    const filterSnapshot = filters;
 
-    getTickets(filters).then((data) => {
-      if (isCurrent) {
-        setResult(data || { pagination: null, tickets: [] });
-        setError("");
+    async function refreshQueue({ initial = false } = {}) {
+      if (!isCurrent || isRequestInFlight) return;
+
+      isRequestInFlight = true;
+      try {
+        const data = await getTickets(filterSnapshot);
+        if (isCurrent) {
+          setResult(data || { pagination: null, tickets: [] });
+          setError("");
+        }
+      } catch (requestError) {
+        if (isCurrent && initial) {
+          setError(requestError.message || "Unable to load the ticket queue.");
+        }
+      } finally {
+        isRequestInFlight = false;
+        if (isCurrent && initial) setIsLoading(false);
       }
-    }).catch((requestError) => {
-      if (isCurrent) setError(requestError.message || "Unable to load the ticket queue.");
-    }).finally(() => {
-      if (isCurrent) setIsLoading(false);
-    });
+    }
 
-    return () => { isCurrent = false; };
+    refreshQueue({ initial: true });
+    const intervalId = window.setInterval(refreshQueue, 15000);
+
+    return () => {
+      isCurrent = false;
+      window.clearInterval(intervalId);
+    };
   }, [filters]);
 
   function handleFilterChange(event) {

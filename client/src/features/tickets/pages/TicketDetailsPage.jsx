@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import TicketConversation from "../components/TicketConversation.jsx";
 import { createTicketReply, getTicketById, getTicketReplies } from "../tickets.api.js";
 
@@ -8,17 +8,32 @@ function label(value) {
 
 export default function TicketDetailsPage({ ticketId }) {
   const [ticket, setTicket] = useState(null);
+  const [loadedTicketId, setLoadedTicketId] = useState(null);
   const [replies, setReplies] = useState([]);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [replyError, setReplyError] = useState("");
+  const currentTicketIdRef = useRef(ticketId);
+  const hasLoadedTicket = Boolean(ticket);
+
+  useLayoutEffect(() => {
+    currentTicketIdRef.current = ticketId;
+  }, [ticketId]);
 
   useEffect(() => {
     let isCurrent = true;
 
     async function loadTicket() {
+      setTicket(null);
+      setLoadedTicketId(null);
+      setReplies([]);
+      setError("");
+      setReplyError("");
+      setIsLoading(true);
+      setIsSending(false);
+
       try {
         const [ticketResult, repliesResult] = await Promise.all([
           getTicketById(ticketId),
@@ -26,6 +41,7 @@ export default function TicketDetailsPage({ ticketId }) {
         ]);
         if (isCurrent) {
           setTicket(ticketResult);
+          setLoadedTicketId(ticketId);
           setReplies(repliesResult);
           setError("");
         }
@@ -41,23 +57,40 @@ export default function TicketDetailsPage({ ticketId }) {
   }, [ticketId]);
 
   useEffect(() => {
-    if (!ticketId || !ticket) return undefined;
+    if (!ticketId || !hasLoadedTicket || loadedTicketId !== ticketId) {
+      return undefined;
+    }
 
     let isCurrent = true;
-    const intervalId = window.setInterval(async () => {
+    let isRequestInFlight = false;
+
+    async function refreshTicket() {
+      if (!isCurrent || isRequestInFlight) return;
+
+      isRequestInFlight = true;
       try {
-        const latestReplies = await getTicketReplies(ticketId);
-        if (isCurrent) setReplies(latestReplies);
+        const [latestTicket, latestReplies] = await Promise.all([
+          getTicketById(ticketId),
+          getTicketReplies(ticketId),
+        ]);
+        if (isCurrent) {
+          setTicket(latestTicket);
+          setReplies(latestReplies);
+        }
       } catch {
         // Keep the existing conversation visible when a background refresh fails.
+      } finally {
+        isRequestInFlight = false;
       }
-    }, 15000);
+    }
+
+    const intervalId = window.setInterval(refreshTicket, 15000);
 
     return () => {
       isCurrent = false;
       window.clearInterval(intervalId);
     };
-  }, [ticket, ticketId]);
+  }, [hasLoadedTicket, loadedTicketId, ticketId]);
 
   async function handleReplySubmit(event) {
     event.preventDefault();
@@ -73,14 +106,21 @@ export default function TicketDetailsPage({ ticketId }) {
 
     setIsSending(true);
     setReplyError("");
+    const requestTicketId = currentTicketIdRef.current;
     try {
-      const reply = await createTicketReply(ticketId, trimmedMessage);
-      setReplies((currentReplies) => [...currentReplies, reply]);
-      setMessage("");
+      const reply = await createTicketReply(requestTicketId, trimmedMessage);
+      if (requestTicketId === currentTicketIdRef.current) {
+        setReplies((currentReplies) => [...currentReplies, reply]);
+        setMessage("");
+      }
     } catch (requestError) {
-      setReplyError(requestError.message || "Unable to send your reply.");
+      if (requestTicketId === currentTicketIdRef.current) {
+        setReplyError(requestError.message || "Unable to send your reply.");
+      }
     } finally {
-      setIsSending(false);
+      if (requestTicketId === currentTicketIdRef.current) {
+        setIsSending(false);
+      }
     }
   }
 

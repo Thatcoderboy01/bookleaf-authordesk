@@ -40,24 +40,42 @@ export default function AdminTicketDetailsPage({ ticketId }) {
 
   useEffect(() => {
     let isCurrent = true;
+    let isRequestInFlight = false;
 
-    Promise.all([
-      getTicketById(ticketId),
-      getTicketReplies(ticketId),
-      getInternalNotes(ticketId),
-    ]).then(([ticketResult, repliesResult, notesResult]) => {
-      if (isCurrent) {
-        setTicket(ticketResult);
-        setReplies(repliesResult);
-        setNotes(notesResult);
+    async function refreshTicket({ initial = false } = {}) {
+      if (!isCurrent || isRequestInFlight) return;
+
+      isRequestInFlight = true;
+      try {
+        const [ticketResult, repliesResult, notesResult] = await Promise.all([
+          getTicketById(ticketId),
+          getTicketReplies(ticketId),
+          getInternalNotes(ticketId),
+        ]);
+
+        if (isCurrent) {
+          setTicket(ticketResult);
+          setReplies(repliesResult);
+          setNotes(notesResult);
+          setError("");
+        }
+      } catch (requestError) {
+        if (isCurrent && initial) {
+          setError(requestError.message || "Unable to load this ticket.");
+        }
+      } finally {
+        isRequestInFlight = false;
+        if (isCurrent && initial) setIsLoading(false);
       }
-    }).catch((requestError) => {
-      if (isCurrent) setError(requestError.message || "Unable to load this ticket.");
-    }).finally(() => {
-      if (isCurrent) setIsLoading(false);
-    });
+    }
 
-    return () => { isCurrent = false; };
+    refreshTicket({ initial: true });
+    const intervalId = window.setInterval(refreshTicket, 15000);
+
+    return () => {
+      isCurrent = false;
+      window.clearInterval(intervalId);
+    };
   }, [ticketId]);
 
   async function handleTicketUpdate(event) {
