@@ -294,6 +294,13 @@ h1, h2, h3, h4 {
 .internal-notes-list { display: grid; gap: 10px; padding: 0 20px 20px; }
 .internal-note { background: #fff8e7; border: 1px solid #f6e5b7; border-radius: 8px; padding: 12px; }
 .internal-note p { color: #66532b; font-size: 11px; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+.ai-draft-panel { margin-top: 20px; overflow: hidden; }
+.ai-draft-message, .ai-draft-notice { margin: 0 20px 12px; }
+.ai-draft-notice { background: #ecfdf5; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 11px; padding: 10px 12px; }
+.ai-draft-body { display: grid; gap: 10px; padding: 0 20px 20px; }
+.ai-draft-body textarea { border: 1px solid var(--border); border-radius: 8px; min-height: 140px; padding: 10px; resize: vertical; }
+.ai-draft-actions { display: flex; gap: 10px; }
+.ai-draft-actions button:not(.primary-button) { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--primary); font-size: 11px; padding: 8px 12px; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-bottom: 24px; }
 .stat-card { min-width: 0; padding: 19px 19px 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 2px 5px #17203304; }
 .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

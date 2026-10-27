@@ -63,3 +63,28 @@ export async function createInternalNote(ticketId, note) {
 
   return data?.internalNote || null;
 }
+
+export async function generateTicketDraft(ticketId) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/ai-draft`, {
+    method: "POST",
+  });
+
+  return data?.draft || null;
+}
+
+export async function updateTicketDraft(ticketId, draft) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/ai-draft`, {
+    body: JSON.stringify({ draft }),
+    method: "PATCH",
+  });
+
+  return data?.draft || null;
+}
+
+export async function sendTicketDraft(ticketId) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/ai-draft/send`, {
+    method: "POST",
+  });
+
+  return data?.reply || null;
+}

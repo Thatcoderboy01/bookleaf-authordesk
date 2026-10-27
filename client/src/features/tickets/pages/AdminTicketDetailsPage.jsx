@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import TicketConversation from "../components/TicketConversation.jsx";
+import AiResponseDraft from "../components/AiResponseDraft.jsx";
 import {
   createInternalNote,
   createTicketReply,
@@ -132,6 +133,7 @@ export default function AdminTicketDetailsPage({ ticketId }) {
           <form className="reply-form" onSubmit={handleReplySubmit}><label htmlFor="admin-reply">Reply to author</label><textarea id="admin-reply" onChange={(event) => setReply(event.target.value)} rows="4" value={reply} /><div className="reply-form-footer"><span>{reply.length}/5000</span><button className="primary-button" disabled={isSaving} type="submit">Send reply</button></div></form>
         </article>
       </section>
+      <AiResponseDraft ticketId={ticketId} onReplySent={(createdReply) => setReplies((current) => [...current, createdReply])} />
       <section className="panel internal-notes-panel">
         <div className="panel-heading"><div><h2>Internal notes</h2><p>Visible only to administrators.</p></div></div>
         <div className="internal-notes-list">{notes.length === 0 ? <div className="table-empty-state">No internal notes yet.</div> : notes.map((item) => <article className="internal-note" key={item.id}><p>{item.note}</p></article>)}</div>
