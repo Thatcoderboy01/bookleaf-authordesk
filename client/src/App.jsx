@@ -6,6 +6,7 @@ import MyBooksPage from "./features/books/pages/MyBooksPage.jsx";
 import MyRoyaltiesPage from "./features/royalties/pages/MyRoyaltiesPage.jsx";
 import CreateTicketPage from "./features/tickets/pages/CreateTicketPage.jsx";
 import MyTicketsPage from "./features/tickets/pages/MyTicketsPage.jsx";
+import TicketDetailsPage from "./features/tickets/pages/TicketDetailsPage.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
 const tickets = [
@@ -57,6 +58,9 @@ function App() {
   const bookId = currentPath.startsWith(`${routes.books.path}/`)
     ? decodeURIComponent(currentPath.slice(`${routes.books.path}/`.length))
     : null;
+  const ticketId = currentPath.startsWith(`${routes.tickets.path}/`) && currentPath !== "#/tickets/new"
+    ? decodeURIComponent(currentPath.slice(`${routes.tickets.path}/`.length))
+    : null;
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -98,6 +102,8 @@ function App() {
         ) : currentRoute === routes.tickets ? (
           currentPath === "#/tickets/new"
             ? <CreateTicketPage onCreated={() => { window.location.hash = "#/tickets"; }} />
+            : ticketId
+              ? <TicketDetailsPage ticketId={ticketId} />
             : <MyTicketsPage />
         ) : currentRoute !== routes.overview ? (
           <section className="empty-state" aria-live="polite">

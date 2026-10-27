@@ -32,6 +32,9 @@ export function getRouteByPath(path) {
   if (path === "#/tickets/new") {
     return routes.tickets;
   }
+  if (path.startsWith(`${routes.tickets.path}/`)) {
+    return routes.tickets;
+  }
 
   return Object.values(routes).find((route) => route.path === path) || null;
 }

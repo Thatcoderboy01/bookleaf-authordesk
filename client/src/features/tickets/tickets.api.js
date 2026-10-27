@@ -21,3 +21,22 @@ export async function createTicket(input) {
 
   return data?.ticket || null;
 }
+
+export async function getTicketById(ticketId) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}`);
+  return data?.ticket || null;
+}
+
+export async function getTicketReplies(ticketId) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/replies`);
+  return data?.replies || [];
+}
+
+export async function createTicketReply(ticketId, message) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/replies`, {
+    body: JSON.stringify({ message }),
+    method: "POST",
+  });
+
+  return data?.reply || null;
+}

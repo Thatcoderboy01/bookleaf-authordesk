@@ -266,6 +266,25 @@ h1, h2, h3, h4 {
 .pagination { align-items: center; display: flex; gap: 16px; justify-content: center; padding: 24px 0; }
 .pagination button { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--primary); font-size: 11px; padding: 8px 12px; }
 .pagination span { color: var(--muted); font-size: 11px; }
+.ticket-detail-heading { margin: 20px 0 24px; }
+.ticket-detail-heading h1 { font-size: clamp(22px, 2vw, 29px); margin: 0 0 8px; }
+.ticket-detail-heading p { color: var(--muted); font-size: 11px; }
+.ticket-description { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; margin-bottom: 20px; padding: 20px; }
+.ticket-description p { color: #4b5568; font-size: 12px; line-height: 1.7; margin: 8px 0 0; white-space: pre-wrap; }
+.conversation-panel { overflow: hidden; }
+.conversation-list { display: grid; gap: 12px; padding: 0 20px 20px; }
+.conversation-message { border-radius: 10px; padding: 14px 16px; }
+.conversation-message.author { background: #f0efff; margin-left: 10%; }
+.conversation-message.admin { background: #f4f6f9; margin-right: 10%; }
+.conversation-message-header { align-items: center; display: flex; justify-content: space-between; gap: 12px; }
+.conversation-message-header strong { color: var(--text); font-size: 11px; }
+.conversation-message-header time { color: var(--muted); font-size: 9px; }
+.conversation-message p { color: #4b5568; font-size: 11px; line-height: 1.6; margin: 8px 0 0; white-space: pre-wrap; }
+.conversation-empty { color: var(--muted); font-size: 12px; padding: 0 20px 20px; }
+.reply-form { border-top: 1px solid #f0f1f5; display: grid; gap: 8px; padding: 20px; }
+.reply-form label { color: var(--text); font-size: 11px; font-weight: 600; }
+.reply-form textarea { border: 1px solid var(--border); border-radius: 8px; min-height: 110px; padding: 10px; resize: vertical; }
+.reply-form-footer { align-items: center; color: var(--muted); display: flex; font-size: 10px; justify-content: space-between; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-bottom: 24px; }
 .stat-card { min-width: 0; padding: 19px 19px 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 2px 5px #17203304; }
 .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
