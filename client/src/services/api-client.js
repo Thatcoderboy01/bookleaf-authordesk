@@ -25,7 +25,7 @@ function getRequestUrl(path) {
   return `${getApiBaseUrl()}/${String(path).replace(/^\/+/, "")}`;
 }
 
-function getAccessToken() {
+export function getAccessToken() {
   return window.localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
