@@ -9,9 +9,9 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(value));
 }
 
-export default function TicketCard({ ticket }) {
+export default function TicketCard({ ticket, basePath = "#/tickets" }) {
   return (
-    <a className="author-ticket-card" href={`#/tickets/${encodeURIComponent(ticket.id)}`}>
+    <a className="author-ticket-card" href={`${basePath}/${encodeURIComponent(ticket.id)}`}>
       <div>
         <span className="eyebrow">{ticket.id}</span>
         <h2>{ticket.subject}</h2>

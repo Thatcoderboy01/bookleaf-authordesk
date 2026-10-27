@@ -35,6 +35,9 @@ export function getRouteByPath(path) {
   if (path.startsWith(`${routes.tickets.path}/`)) {
     return routes.tickets;
   }
+  if (path.startsWith(`${routes.adminTickets.path}/`)) {
+    return routes.adminTickets;
+  }
 
   return Object.values(routes).find((route) => route.path === path) || null;
 }

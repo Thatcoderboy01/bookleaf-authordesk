@@ -7,6 +7,7 @@ import MyRoyaltiesPage from "./features/royalties/pages/MyRoyaltiesPage.jsx";
 import CreateTicketPage from "./features/tickets/pages/CreateTicketPage.jsx";
 import MyTicketsPage from "./features/tickets/pages/MyTicketsPage.jsx";
 import TicketDetailsPage from "./features/tickets/pages/TicketDetailsPage.jsx";
+import AdminTicketQueuePage from "./features/tickets/pages/AdminTicketQueuePage.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
 const tickets = [
@@ -61,6 +62,9 @@ function App() {
   const ticketId = currentPath.startsWith(`${routes.tickets.path}/`) && currentPath !== "#/tickets/new"
     ? decodeURIComponent(currentPath.slice(`${routes.tickets.path}/`.length))
     : null;
+  const adminTicketId = currentPath.startsWith(`${routes.adminTickets.path}/`)
+    ? decodeURIComponent(currentPath.slice(`${routes.adminTickets.path}/`.length))
+    : null;
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -105,6 +109,15 @@ function App() {
             : ticketId
               ? <TicketDetailsPage ticketId={ticketId} />
             : <MyTicketsPage />
+        ) : currentRoute === routes.adminTickets ? (
+          adminTicketId ? (
+            <section className="empty-state">
+              <span className="eyebrow">COMING NEXT</span>
+              <h1>Ticket {adminTicketId}</h1>
+              <p>Admin ticket detail will be available in the next task.</p>
+              <a className="primary-button" href="#/admin/tickets">Return to queue</a>
+            </section>
+          ) : <AdminTicketQueuePage />
         ) : currentRoute !== routes.overview ? (
           <section className="empty-state" aria-live="polite">
             <span className="eyebrow">COMING NEXT</span>
