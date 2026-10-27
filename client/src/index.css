@@ -189,13 +189,13 @@ h1, h2, h3, h4 {
 .help-icon { display: grid; place-items: center; width: 30px; height: 30px; margin-bottom: 13px; border-radius: 9px; background: #5146e52e; color: #aaa5ff; font-size: 18px; }
 .help-card strong { display: block; color: #f3f4fb; font-size: 12px; }
 .help-card p { margin: 6px 0 13px; color: #9aa3ba; font-size: 11px; line-height: 1.6; }
-.help-card button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 10px; border: 1px solid #ffffff18; border-radius: 6px; background: #ffffff0a; color: #e2e5f2; font-size: 11px; }
+.help-card button, .help-card a { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 10px; border: 1px solid #ffffff18; border-radius: 6px; background: #ffffff0a; color: #e2e5f2; font-size: 11px; }
 .profile { display: flex; align-items: center; gap: 10px; padding: 15px 5px 2px; border-top: 1px solid #ffffff13; }
 .avatar, .top-avatar { display: grid; place-items: center; flex: 0 0 35px; width: 35px; height: 35px; border-radius: 50%; background: #e8e6ff; color: #5146e5; font-size: 11px; font-weight: 700; }
 .profile-info { display: grid; gap: 4px; min-width: 0; }
 .profile-info strong { color: #f3f4fb; font-size: 11px; }
 .profile-info span { color: #929bb2; font-size: 10px; }
-.profile-menu { margin-left: auto; font-size: 19px; }
+.profile-menu { margin-left: auto; border: 0; background: transparent; color: #9aa3ba; font-size: 11px; padding: 4px; }
 .main-area { flex: 1; min-width: 0; }
 .topbar { display: flex; align-items: center; justify-content: space-between; height: 70px; padding: 0 37px; background: #fff; border-bottom: 1px solid var(--border); }
 .breadcrumbs { display: flex; align-items: center; gap: 11px; color: #9098aa; font-size: 12px; }
@@ -215,6 +215,9 @@ h1, h2, h3, h4 {
 .primary-button { display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; padding: 11px 16px; border: 0; border-radius: 8px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 600; box-shadow: 0 4px 10px #5146e526; }
 .primary-button:hover { background: var(--primary-hover); }
 .primary-button span { font-size: 17px; line-height: 1; }
+.empty-state { align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; display: flex; flex-direction: column; margin: 24px 0; max-width: 620px; padding: 36px; }
+.empty-state h1 { font-size: 28px; margin-bottom: 10px; }
+.empty-state p { color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-bottom: 24px; }
 .stat-card { min-width: 0; padding: 19px 19px 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 2px 5px #17203304; }
 .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

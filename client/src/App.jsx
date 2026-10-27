@@ -1,4 +1,7 @@
 import LoginPage from "./features/auth/pages/LoginPage.jsx";
+import AdminLayout from "./components/layout/AdminLayout.jsx";
+import AuthorLayout from "./components/layout/AuthorLayout.jsx";
+import { getRouteByPath, routes, useHashRoute } from "./app/router.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
 const tickets = [
@@ -37,77 +40,59 @@ const tickets = [
 ]
 
 const navigation = [
-  { icon: '◫', label: 'Overview', active: true },
-  { icon: '▤', label: 'My Tickets', count: '4' },
-  { icon: '▧', label: 'My Books' },
-  { icon: '₹', label: 'Royalties' },
-]
+  { icon: '◫', label: 'Overview', path: routes.overview.path },
+  { icon: '▤', label: 'My Tickets', count: '4', path: routes.tickets.path },
+  { icon: '▧', label: 'My Books', path: routes.books.path },
+  { icon: '₹', label: 'Royalties', path: routes.royalties.path },
+];
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
+  const currentPath = useHashRoute();
+  const currentRoute = getRouteByPath(currentPath);
 
   if (!isAuthenticated) {
     return <LoginPage />;
   }
 
+  const isAllowedRoute = currentRoute?.roles.includes(user.role);
+  const layoutNavigation = user.role === "ADMIN"
+    ? [...navigation, {
+      icon: '▤',
+      label: 'Ticket Queue',
+      path: routes.adminTickets.path,
+    }]
+    : navigation;
+  const activeNavigation = layoutNavigation.map((item) => ({
+    ...item,
+    active: item.path === currentPath,
+  }));
+  const Layout = user.role === "ADMIN" ? AdminLayout : AuthorLayout;
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a className="brand" href="#">
-          <span className="brand-mark">B</span>
-          <span>BookLeaf<span className="brand-light">Desk</span>
-            <small>AUTHOR SUPPORT PORTAL</small>
-          </span>
-        </a>
-
-        <div className="workspace-label">WORKSPACE</div>
-        <nav className="navigation">
-          {navigation.map((item) => (
-            <a
-              className={`nav-item ${item.active ? 'active' : ''}`}
-              href="#"
-              key={item.label}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span>{item.label}</span>
-              {item.count && <span className="nav-count">{item.count}</span>}
-            </a>
-          ))}
-        </nav>
-
-        <div className="sidebar-bottom">
-          <div className="help-card">
-            <span className="help-icon">✳</span>
-            <strong>Need some help?</strong>
-            <p>Our support team is here for you.</p>
-            <button type="button" onClick={() => window.alert('Support tickets will be connected soon.')}>
-              Contact support <span>↗</span>
-            </button>
-          </div>
-          <div className="profile">
-            <div className="avatar">TR</div>
-            <div className="profile-info">
-              <strong>{user.name}</strong>
-              <span>Author account</span>
-            </div>
-              <button className="profile-menu" onClick={logout} type="button">Log out</button>
-          </div>
-        </div>
-      </aside>
-
-      <main className="main-area">
-        <header className="topbar">
-          <div className="breadcrumbs">
-            <span>Workspace</span><span className="crumb-separator">/</span><strong>Overview</strong>
-          </div>
-          <div className="topbar-actions">
-            <span className="system-status"><span /> All systems operational</span>
-            <button className="icon-button" aria-label="Notifications" type="button">♧</button>
-            <div className="top-avatar">{user.name.slice(0, 2).toUpperCase()}</div>
-          </div>
-        </header>
-
-        <div className="page-content">
+    <Layout
+      logout={logout}
+      navigation={activeNavigation}
+      routeLabel={currentRoute?.label || "Not found"}
+      user={user}
+    >
+      <div className="page-content">
+        {!currentRoute || !isAllowedRoute ? (
+          <section className="empty-state" aria-live="polite">
+            <span className="eyebrow">ACCESS RESTRICTED</span>
+            <h1>You do not have access to this workspace.</h1>
+            <p>Use the navigation available for your account to continue.</p>
+            <a className="primary-button" href="#/">Return to overview</a>
+          </section>
+        ) : currentRoute !== routes.overview ? (
+          <section className="empty-state" aria-live="polite">
+            <span className="eyebrow">COMING NEXT</span>
+            <h1>{currentRoute.label}</h1>
+            <p>This workspace is reserved for the next implementation task.</p>
+            <a className="primary-button" href="#/">Return to overview</a>
+          </section>
+        ) : (
+          <>
           <section className="welcome-row">
             <div>
               <div className="eyebrow">MONDAY, OCTOBER 27, 2026</div>
@@ -245,9 +230,10 @@ function App() {
             <span>© 2026 BookLeaf AuthorDesk</span>
             <span>Made for authors, with care <span className="footer-heart">♥</span></span>
           </footer>
+          </>
+        )}
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }
 
