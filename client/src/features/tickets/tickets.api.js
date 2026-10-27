@@ -40,3 +40,26 @@ export async function createTicketReply(ticketId, message) {
 
   return data?.reply || null;
 }
+
+export async function updateTicket(ticketId, input) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}`, {
+    body: JSON.stringify(input),
+    method: "PATCH",
+  });
+
+  return data?.ticket || null;
+}
+
+export async function getInternalNotes(ticketId) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/internal-notes`);
+  return data?.internalNotes || [];
+}
+
+export async function createInternalNote(ticketId, note) {
+  const data = await apiRequest(`/tickets/${encodeURIComponent(ticketId)}/internal-notes`, {
+    body: JSON.stringify({ note }),
+    method: "POST",
+  });
+
+  return data?.internalNote || null;
+}

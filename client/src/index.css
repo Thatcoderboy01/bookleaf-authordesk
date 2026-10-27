@@ -285,6 +285,15 @@ h1, h2, h3, h4 {
 .reply-form label { color: var(--text); font-size: 11px; font-weight: 600; }
 .reply-form textarea { border: 1px solid var(--border); border-radius: 8px; min-height: 110px; padding: 10px; resize: vertical; }
 .reply-form-footer { align-items: center; color: var(--muted); display: flex; font-size: 10px; justify-content: space-between; }
+.admin-ticket-layout { display: grid; gap: 20px; grid-template-columns: minmax(210px, .7fr) minmax(0, 1.5fr); margin-top: 20px; }
+.admin-controls { display: grid; gap: 12px; padding-bottom: 20px; }
+.admin-controls .panel-heading { padding-bottom: 8px; }
+.admin-controls label { color: var(--text); display: grid; font-size: 11px; font-weight: 600; gap: 6px; padding: 0 20px; }
+.admin-controls select { border: 1px solid var(--border); border-radius: 7px; color: var(--text); min-height: 38px; padding: 0 9px; }
+.internal-notes-panel { margin-top: 20px; overflow: hidden; }
+.internal-notes-list { display: grid; gap: 10px; padding: 0 20px 20px; }
+.internal-note { background: #fff8e7; border: 1px solid #f6e5b7; border-radius: 8px; padding: 12px; }
+.internal-note p { color: #66532b; font-size: 11px; line-height: 1.6; margin: 0; white-space: pre-wrap; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-bottom: 24px; }
 .stat-card { min-width: 0; padding: 19px 19px 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: 0 2px 5px #17203304; }
 .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
