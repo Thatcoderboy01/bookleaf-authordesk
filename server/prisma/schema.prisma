@@ -144,6 +144,7 @@ model Ticket {
   aiClassificationNote String?         @db.Text
   aiModel              String?
   aiDraftResponse      String?         @db.Text
+  aiDraftId            String?
   aiDraftGeneratedAt   DateTime?
   aiDraftEdited        Boolean         @default(false)
 
@@ -171,6 +172,7 @@ model TicketReply {
   ticketId   String
   senderId   String
   message    String          @db.Text
+  aiDraftId  String?         @unique
   senderType ReplySenderType
   createdAt  DateTime        @default(now())
 

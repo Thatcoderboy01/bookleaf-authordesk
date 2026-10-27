@@ -1,4 +1,4 @@
-
+import { randomUUID } from "node:crypto";
 import prisma from "../../config/database.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { classifyTicket } from "../ai/classification.service.js";
@@ -42,6 +42,7 @@ export async function generateTicketDraft(ticketId) {
     where: { id: ticketId },
     data: {
       aiDraftResponse: result.draft,
+      aiDraftId: randomUUID(),
       aiDraftGeneratedAt: new Date(),
       aiDraftEdited: false,
       aiModel: process.env.GEMINI_MODEL || "gemini-3.6-flash",
@@ -434,6 +435,7 @@ export async function updateTicketDraft(ticketId, draft) {
     where: { id: ticketId },
     data: {
       aiDraftResponse: draft,
+      aiDraftId: randomUUID(),
       aiDraftEdited: true,
     },
     select: {
@@ -450,6 +452,7 @@ export async function updateTicketDraft(ticketId, draft) {
 
 
 
+
 export async function sendTicketDraftAsReply(ticketId, user) {
   if (user.role !== "ADMIN") {
     throw new ApiError(403, "Only admins can send AI ticket drafts");
@@ -460,6 +463,7 @@ export async function sendTicketDraftAsReply(ticketId, user) {
     select: {
       id: true,
       aiDraftResponse: true,
+      aiDraftId: true,
     },
   });
 
@@ -473,36 +477,91 @@ export async function sendTicketDraftAsReply(ticketId, user) {
     throw new ApiError(400, "No AI draft available to send");
   }
 
-  const existingReply = await prisma.ticketReply.findFirst({
+  // Support drafts created before aiDraftId was introduced.
+  let draftId = ticket.aiDraftId;
+
+  if (!draftId) {
+    const candidateId = randomUUID();
+
+    await prisma.ticket.updateMany({
+      where: {
+        id: ticket.id,
+        aiDraftId: null,
+      },
+      data: {
+        aiDraftId: candidateId,
+      },
+    });
+
+    const refreshedTicket = await prisma.ticket.findUnique({
+      where: { id: ticket.id },
+      select: {
+        aiDraftId: true,
+        aiDraftResponse: true,
+      },
+    });
+
+    draftId = refreshedTicket?.aiDraftId;
+
+    if (!draftId) {
+      throw new ApiError(
+        409,
+        "Unable to identify the current draft. Please generate it again."
+      );
+    }
+
+    // The draft may have changed while its ID was being assigned.
+    if (refreshedTicket.aiDraftResponse !== ticket.aiDraftResponse) {
+      throw new ApiError(
+        409,
+        "The AI draft changed while sending. Please review the latest draft."
+      );
+    }
+  }
+
+  // Re-check that the draft is still the current version.
+  const currentDraft = await prisma.ticket.findFirst({
     where: {
-      ticketId: ticket.id,
-      senderType: "ADMIN",
-      message: draft,
+      id: ticket.id,
+      aiDraftId: draftId,
+      aiDraftResponse: ticket.aiDraftResponse,
     },
     select: { id: true },
   });
 
-  if (existingReply) {
+  if (!currentDraft) {
     throw new ApiError(
       409,
-      "This AI draft has already been sent as a reply"
+      "The AI draft changed while sending. Please review the latest draft."
     );
   }
 
-  return prisma.ticketReply.create({
-    data: {
-      ticketId: ticket.id,
-      senderId: user.id,
-      senderType: "ADMIN",
-      message: draft,
-    },
-    select: {
-      id: true,
-      ticketId: true,
-      senderId: true,
-      senderType: true,
-      message: true,
-      createdAt: true,
-    },
-  });
+  try {
+    return await prisma.ticketReply.create({
+      data: {
+        ticketId: ticket.id,
+        senderId: user.id,
+        senderType: "ADMIN",
+        message: draft,
+        aiDraftId: draftId,
+      },
+      select: {
+        id: true,
+        ticketId: true,
+        senderId: true,
+        senderType: true,
+        message: true,
+        createdAt: true,
+      },
+    });
+  } catch (error) {
+    if (error.code === "P2002") {
+      throw new ApiError(
+        409,
+        "This AI draft has already been sent as a reply"
+      );
+    }
+
+    throw error;
+  }
 }
