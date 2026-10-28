@@ -184,7 +184,18 @@ export default function AdminTicketDetailsPage({ ticketId }) {
           <p className="ai-classification-empty">No AI classification is available. The ticket can still be classified manually.</p>
         )}
       </section>
-      <AiResponseDraft ticketId={ticketId} onReplySent={(createdReply) => setReplies((current) => [...current, createdReply])} />
+      <AiResponseDraft
+        key={ticketId}
+        ticketId={ticketId}
+        initialDraft={ticket.aiDraftResponse || ""}
+        onReplySent={(createdReply) => {
+          setReplies((current) => [...current, createdReply]);
+          setTicket((current) => (current ? { ...current, aiDraftResponse: null, aiDraftId: null } : current));
+        }}
+        onDraftUpdated={(updatedDraft) => {
+          setTicket((current) => (current ? { ...current, aiDraftResponse: updatedDraft } : current));
+        }}
+      />
       <section className="panel internal-notes-panel">
         <div className="panel-heading"><div><h2>Internal notes</h2><p>Visible only to administrators.</p></div></div>
         <div className="internal-notes-list">{notes.length === 0 ? <div className="table-empty-state">No internal notes yet.</div> : notes.map((item) => <article className="internal-note" key={item.id}><p>{item.note}</p></article>)}</div>

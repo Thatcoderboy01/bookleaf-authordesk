@@ -72,6 +72,36 @@ test("the same AI draft cannot be sent twice concurrently", async () => {
 
     assert.equal(replies.length, 1, "only one reply should be stored");
     assert.equal(replies[0].aiDraftId, ticket.aiDraftId);
+
+    const refreshedTicket = await prisma.ticket.findUnique({
+      where: { id: ticket.id },
+      select: {
+        aiDraftResponse: true,
+        aiDraftId: true,
+        aiDraftGeneratedAt: true,
+        aiDraftEdited: true,
+      },
+    });
+    assert.equal(
+      refreshedTicket.aiDraftResponse,
+      null,
+      "persisted draft text should be cleared after send"
+    );
+    assert.equal(
+      refreshedTicket.aiDraftId,
+      null,
+      "persisted draft id should be cleared after send"
+    );
+    assert.equal(
+      refreshedTicket.aiDraftGeneratedAt,
+      null,
+      "persisted draft timestamp should be cleared after send"
+    );
+    assert.equal(
+      refreshedTicket.aiDraftEdited,
+      false,
+      "draft edited flag should reset after send"
+    );
   } finally {
     if (ticket) {
       await prisma.ticketReply.deleteMany({
@@ -174,6 +204,8 @@ test("admin responses expose saved classification while author responses do not"
         aiSuggestedCategory: "ROYALTY_PAYMENTS",
         aiSuggestedPriority: "HIGH",
         aiClassificationNote: "Payment language indicates a royalty enquiry.",
+        aiDraftResponse: "Saved draft response for admin review",
+        aiDraftId: `draft-${suffix}`,
       },
     });
 
@@ -184,11 +216,20 @@ test("admin responses expose saved classification while author responses do not"
       adminTicket.aiClassificationNote,
       "Payment language indicates a royalty enquiry."
     );
+    assert.equal(
+      adminTicket.aiDraftResponse,
+      "Saved draft response for admin review"
+    );
+    assert.equal(adminTicket.aiDraftId, `draft-${suffix}`);
 
     const authorTicket = await getTicketById(ticket.id, author);
     assert.equal("aiSuggestedCategory" in authorTicket, false);
     assert.equal("aiSuggestedPriority" in authorTicket, false);
     assert.equal("aiClassificationNote" in authorTicket, false);
+    assert.equal("aiDraftResponse" in authorTicket, false);
+    assert.equal("aiDraftId" in authorTicket, false);
+    assert.equal("aiDraftGeneratedAt" in authorTicket, false);
+    assert.equal("aiDraftEdited" in authorTicket, false);
 
     const adminList = await getTickets(admin, { page: 1, limit: 100 });
     const listedTicket = adminList.tickets.find((item) => item.id === ticket.id);

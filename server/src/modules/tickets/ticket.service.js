@@ -243,6 +243,10 @@ export async function getTicketById(ticketId, user) {
             aiSuggestedCategory: true,
             aiSuggestedPriority: true,
             aiClassificationNote: true,
+            aiDraftResponse: true,
+            aiDraftId: true,
+            aiDraftGeneratedAt: true,
+            aiDraftEdited: true,
           }
         : {}),
       authorId: true,
@@ -579,23 +583,36 @@ export async function sendTicketDraftAsReply(ticketId, user) {
   }
 
   try {
-    return await prisma.ticketReply.create({
-      data: {
-        ticketId: ticket.id,
-        senderId: user.id,
-        senderType: "ADMIN",
-        message: draft,
-        aiDraftId: draftId,
-      },
-      select: {
-        id: true,
-        ticketId: true,
-        senderId: true,
-        senderType: true,
-        message: true,
-        createdAt: true,
-      },
-    });
+    const [reply] = await prisma.$transaction([
+      prisma.ticketReply.create({
+        data: {
+          ticketId: ticket.id,
+          senderId: user.id,
+          senderType: "ADMIN",
+          message: draft,
+          aiDraftId: draftId,
+        },
+        select: {
+          id: true,
+          ticketId: true,
+          senderId: true,
+          senderType: true,
+          message: true,
+          createdAt: true,
+        },
+      }),
+      prisma.ticket.update({
+        where: { id: ticket.id },
+        data: {
+          aiDraftResponse: null,
+          aiDraftId: null,
+          aiDraftGeneratedAt: null,
+          aiDraftEdited: false,
+        },
+      }),
+    ]);
+
+    return reply;
   } catch (error) {
     if (error.code === "P2002") {
       throw new ApiError(

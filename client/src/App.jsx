@@ -138,13 +138,13 @@ function App() {
           currentPath === `${routes.authorTickets.path}/new`
             ? <CreateTicketPage onCreated={() => { navigate(routes.authorTickets.path, { replace: true }); }} />
             : ticketId
-              ? <TicketDetailsPage ticketId={ticketId} />
+              ? <TicketDetailsPage key={ticketId} ticketId={ticketId} />
             : <MyTicketsPage />
         ) : currentRoute === routes.adminOverview ? (
           <AdminOverviewPage />
         ) : currentRoute === routes.adminTickets ? (
           adminTicketId ? (
-            <AdminTicketDetailsPage ticketId={adminTicketId} />
+            <AdminTicketDetailsPage key={adminTicketId} ticketId={adminTicketId} />
           ) : <AdminTicketQueuePage />
         ) : ![routes.authorOverview, routes.adminOverview].includes(currentRoute) ? (
           <section className="empty-state" aria-live="polite">
