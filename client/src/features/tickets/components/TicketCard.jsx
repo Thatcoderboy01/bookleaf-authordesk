@@ -1,3 +1,5 @@
+import { routes } from "../../../app/router.jsx";
+
 function label(value) {
   return value
     .split("_")
@@ -9,7 +11,7 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(value));
 }
 
-export default function TicketCard({ ticket, basePath = "#/tickets" }) {
+export default function TicketCard({ ticket, basePath = routes.authorTickets.path }) {
   return (
     <a className="author-ticket-card" href={`${basePath}/${encodeURIComponent(ticket.id)}`}>
       <div>

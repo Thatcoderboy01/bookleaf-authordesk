@@ -10,6 +10,7 @@ import {
   getTicketReplies,
   updateTicket,
 } from "../tickets.api.js";
+import { routes } from "../../../app/router.jsx";
 
 const statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
 const categories = [
@@ -146,11 +147,11 @@ export default function AdminTicketDetailsPage({ ticketId }) {
   }
 
   if (isLoading) return <div className="page-content"><div className="loading-state">Loading admin ticket...</div></div>;
-  if (error || !ticket) return <div className="page-content"><section className="empty-state" role="alert"><span className="eyebrow">TICKET UNAVAILABLE</span><h1>We could not load this ticket.</h1><p>{error || "This ticket was not found."}</p><a className="primary-button" href="#/admin/tickets">Return to queue</a></section></div>;
+  if (error || !ticket) return <div className="page-content"><section className="empty-state" role="alert"><span className="eyebrow">TICKET UNAVAILABLE</span><h1>We could not load this ticket.</h1><p>{error || "This ticket was not found."}</p><a className="primary-button" href={routes.adminTickets.path}>Return to queue</a></section></div>;
 
   return (
     <div className="page-content">
-      <a className="text-button" href="#/admin/tickets">← Back to queue</a>
+      <a className="text-button" href={routes.adminTickets.path}>← Back to queue</a>
       <section className="ticket-detail-heading"><div><span className="eyebrow">{ticket.id}</span><h1>{ticket.subject}</h1><p>{ticket.description}</p></div></section>
       {actionError && <div className="form-error" role="alert">{actionError}</div>}
       <section className="admin-ticket-layout">

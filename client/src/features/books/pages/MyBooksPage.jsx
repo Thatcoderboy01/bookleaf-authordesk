@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getBookById, getBooks } from "../books.api.js";
+import { routes } from "../../../app/router.jsx";
 
 function formatDate(value) {
   if (!value) {
@@ -156,7 +157,7 @@ export default function MyBooksPage({ bookId }) {
   }
 
   if (bookId && selectedBook) {
-    return <BookDetails book={selectedBook} onBack={() => { window.location.hash = "#/books"; }} />;
+    return <BookDetails book={selectedBook} onBack={() => { window.location.href = routes.authorBooks.path; }} />;
   }
 
   if (bookId && !selectedBook) {
@@ -166,7 +167,7 @@ export default function MyBooksPage({ bookId }) {
           <span className="eyebrow">BOOK NOT FOUND</span>
           <h1>This book is not available.</h1>
           <p>The book may not exist or may not be accessible to your account.</p>
-          <a className="primary-button" href="#/books">Return to books</a>
+          <a className="primary-button" href={routes.authorBooks.path}>Return to books</a>
         </section>
       </div>
     );
@@ -191,7 +192,7 @@ export default function MyBooksPage({ bookId }) {
       ) : (
         <section className="books-grid" aria-label="My books">
           {books.map((book) => (
-            <a className="book-card" href={`#/books/${encodeURIComponent(book.id)}`} key={book.id}>
+            <a className="book-card" href={`${routes.authorBooks.path}/${encodeURIComponent(book.id)}`} key={book.id}>
               <div className="book-card-top">
                 <span className="book-cover">{book.title.slice(0, 1).toUpperCase()}</span>
                 <span className="book-status">{formatStatus(book.status)}</span>

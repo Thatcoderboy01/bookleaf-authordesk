@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import TicketConversation from "../components/TicketConversation.jsx";
 import { createTicketReply, getTicketById, getTicketReplies } from "../tickets.api.js";
+import { routes } from "../../../app/router.jsx";
 
 function label(value) {
   return value.split("_").map((part) => part.charAt(0) + part.slice(1).toLowerCase()).join(" ");
@@ -129,12 +130,12 @@ export default function TicketDetailsPage({ ticketId }) {
   }
 
   if (error || !ticket) {
-    return <div className="page-content"><section className="empty-state" role="alert"><span className="eyebrow">TICKET UNAVAILABLE</span><h1>We could not load this ticket.</h1><p>{error || "This ticket was not found or is not accessible to your account."}</p><a className="primary-button" href="#/tickets">Return to tickets</a></section></div>;
+    return <div className="page-content"><section className="empty-state" role="alert"><span className="eyebrow">TICKET UNAVAILABLE</span><h1>We could not load this ticket.</h1><p>{error || "This ticket was not found or is not accessible to your account."}</p><a className="primary-button" href={routes.authorTickets.path}>Return to tickets</a></section></div>;
   }
 
   return (
     <div className="page-content">
-      <a className="text-button" href="#/tickets">← Back to tickets</a>
+      <a className="text-button" href={routes.authorTickets.path}>← Back to tickets</a>
       <section className="ticket-detail-heading">
         <div><span className="eyebrow">{ticket.id}</span><h1>{ticket.subject}</h1><p>{label(ticket.category)} · {label(ticket.status)} · {label(ticket.priority)}</p></div>
       </section>

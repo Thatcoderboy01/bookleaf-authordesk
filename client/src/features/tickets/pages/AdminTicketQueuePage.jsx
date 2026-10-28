@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import TicketCard from "../components/TicketCard.jsx";
 import TicketFilters from "../components/TicketFilters.jsx";
 import { getTickets } from "../tickets.api.js";
+import { routes } from "../../../app/router.jsx";
 
 const initialFilters = {
   category: "",
@@ -95,7 +96,7 @@ export default function AdminTicketQueuePage() {
       ) : (
         <section className="ticket-list">
           {result.tickets.map((ticket) => (
-            <TicketCard basePath="#/admin/tickets" key={ticket.id} ticket={ticket} />
+            <TicketCard basePath={routes.adminTickets.path} key={ticket.id} ticket={ticket} />
           ))}
         </section>
       )}

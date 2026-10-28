@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../../hooks/useAuth.js";
+import { navigate, roleOverviewPaths } from "../../../app/router.jsx";
 
 const initialForm = {
   email: "",
@@ -51,10 +52,11 @@ export default function LoginPage() {
     setSubmitError("");
 
     try {
-      await login({
+      const user = await login({
         email: form.email.trim(),
         password: form.password,
       });
+      navigate(roleOverviewPaths[user.role], { replace: true });
     } catch (error) {
       setSubmitError(error.message || "Unable to sign in. Please try again.");
     } finally {

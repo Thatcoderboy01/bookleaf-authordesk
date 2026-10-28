@@ -7,6 +7,7 @@ import {
 } from "../../services/api-client.js";
 import { login as loginRequest } from "./auth.api.js";
 import { AuthContext } from "./auth-context.js";
+import { navigate, routes } from "../../app/router.jsx";
 
 const USER_KEY = "bookleaf_user";
 
@@ -34,6 +35,7 @@ export function AuthProvider({ children }) {
     clearAccessToken();
     window.sessionStorage.removeItem(USER_KEY);
     setUser(null);
+    navigate(routes.login.path, { replace: true });
   }, []);
 
   useEffect(() => {

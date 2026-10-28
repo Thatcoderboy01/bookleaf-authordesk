@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getBooks } from "../../books/books.api.js";
 import { createTicket } from "../tickets.api.js";
+import { routes } from "../../../app/router.jsx";
 
 const initialForm = { subject: "", description: "", bookId: "" };
 
@@ -92,7 +93,7 @@ export default function CreateTicketPage({ onCreated }) {
             <button className="text-button" onClick={removeSelectedFile} type="button">Remove</button>
           </div>
         )}
-        <div className="ticket-form-actions"><a className="text-button" href="#/tickets">Cancel</a><button className="primary-button" disabled={isSubmitting} type="submit">{isSubmitting ? "Submitting..." : "Submit ticket"}</button></div>
+        <div className="ticket-form-actions"><a className="text-button" href={routes.authorTickets.path}>Cancel</a><button className="primary-button" disabled={isSubmitting} type="submit">{isSubmitting ? "Submitting..." : "Submit ticket"}</button></div>
       </form>
     </div>
   );

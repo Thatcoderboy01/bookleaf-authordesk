@@ -72,6 +72,8 @@ The setup instructions below will be completed alongside the application configu
 4. Set up the MySQL database and run Prisma migrations.
 5. Start the backend and frontend development servers.
 
+The frontend uses browser-history routes. The Vite development server serves `index.html` for direct navigation during local development. Production hosting fallback is documented here but is not yet configured: the deployed host must serve the built Vite entry point, normally `client/dist/index.html` in this repository or `index.html` at the deployed static site's document root, for unknown frontend paths such as `/login`, `/author/**`, and `/admin/**`. `/api/**` requests must continue reaching the backend.
+
 ## Environment Variables
 
 Keep credentials and secrets in local environment files. Do not commit `.env` files or API keys.

@@ -1,7 +1,9 @@
+import { routes } from "../../app/router.jsx";
+
 export default function Sidebar({ navigation, user, logout }) {
   return (
     <aside className="sidebar">
-      <a className="brand" href="#/" aria-label="BookLeaf AuthorDesk home">
+      <a className="brand" href={user.role === "ADMIN" ? routes.adminOverview.path : routes.authorOverview.path} aria-label="BookLeaf AuthorDesk home">
         <span className="brand-mark">B</span>
         <span>BookLeaf<span className="brand-light">Desk</span>
           <small>AUTHOR SUPPORT PORTAL</small>
@@ -28,7 +30,7 @@ export default function Sidebar({ navigation, user, logout }) {
           <span className="help-icon">✳</span>
           <strong>Need some help?</strong>
           <p>Our support team is here for you.</p>
-          <a href={user.role === "ADMIN" ? "#/admin/tickets" : "#/tickets"}>Contact support <span>↗</span></a>
+          <a href={user.role === "ADMIN" ? routes.adminTickets.path : routes.authorTickets.path}>Contact support <span>↗</span></a>
         </div>
         <div className="profile">
           <div className="avatar">{user.name.slice(0, 2).toUpperCase()}</div>
