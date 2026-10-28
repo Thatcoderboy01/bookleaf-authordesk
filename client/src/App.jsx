@@ -16,6 +16,7 @@ import MyTicketsPage from "./features/tickets/pages/MyTicketsPage.jsx";
 import TicketDetailsPage from "./features/tickets/pages/TicketDetailsPage.jsx";
 import AdminTicketQueuePage from "./features/tickets/pages/AdminTicketQueuePage.jsx";
 import AdminTicketDetailsPage from "./features/tickets/pages/AdminTicketDetailsPage.jsx";
+import AdminOverviewPage from "./features/tickets/pages/AdminOverviewPage.jsx";
 import { getTickets } from "./features/tickets/tickets.api.js";
 import { useAuth } from "./hooks/useAuth.js";
 
@@ -44,7 +45,7 @@ function App() {
     : null;
 
   useEffect(() => {
-    if (!isAuthenticated || ![routes.authorOverview, routes.adminOverview].includes(currentRoute)) {
+    if (!isAuthenticated || currentRoute !== routes.authorOverview) {
       return undefined;
     }
 
@@ -139,6 +140,8 @@ function App() {
             : ticketId
               ? <TicketDetailsPage ticketId={ticketId} />
             : <MyTicketsPage />
+        ) : currentRoute === routes.adminOverview ? (
+          <AdminOverviewPage />
         ) : currentRoute === routes.adminTickets ? (
           adminTicketId ? (
             <AdminTicketDetailsPage ticketId={adminTicketId} />
