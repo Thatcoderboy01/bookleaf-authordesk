@@ -26,7 +26,7 @@ function getRequestUrl(path) {
 }
 
 export function getAccessToken() {
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 function getErrorMessage(payload, fallbackMessage) {
@@ -50,15 +50,15 @@ async function parseResponse(response) {
 
 export function setAccessToken(token) {
   if (!token) {
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+    window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
     return;
   }
 
-  window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  window.sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 export function clearAccessToken() {
-  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+  window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 export function setUnauthorizedHandler(handler) {

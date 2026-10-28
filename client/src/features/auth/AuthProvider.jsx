@@ -11,7 +11,7 @@ import { AuthContext } from "./auth-context.js";
 const USER_KEY = "bookleaf_user";
 
 function readStoredUser() {
-  const storedUser = window.localStorage.getItem(USER_KEY);
+  const storedUser = window.sessionStorage.getItem(USER_KEY);
 
   if (!storedUser) {
     return null;
@@ -20,7 +20,7 @@ function readStoredUser() {
   try {
     return JSON.parse(storedUser);
   } catch {
-    window.localStorage.removeItem(USER_KEY);
+    window.sessionStorage.removeItem(USER_KEY);
     return null;
   }
 }
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     clearAccessToken();
-    window.localStorage.removeItem(USER_KEY);
+    window.sessionStorage.removeItem(USER_KEY);
     setUser(null);
   }, []);
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
     }
 
     setAccessToken(data.accessToken);
-    window.localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    window.sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
     setUser(data.user);
 
     return data.user;
