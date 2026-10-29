@@ -1,0 +1,68 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: bookleaf-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-bookleaf_authordesk}
+      MYSQL_USER: ${MYSQL_USER:-bookleaf_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-bookleaf_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    expose:
+      - "3306"
+    networks:
+      - bookleaf-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD:-rootpassword} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: bookleaf-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:8080}
+      DATABASE_URL: mysql://${MYSQL_USER:-bookleaf_user}:${MYSQL_PASSWORD:-bookleaf_password}@mysql:3306/${MYSQL_DATABASE:-bookleaf_authordesk}
+      JWT_SECRET: ${JWT_SECRET:-change_this_to_a_long_random_jwt_secret_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.6-flash}
+    ports:
+      - "5001:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookleaf-network
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: bookleaf-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - bookleaf-network
+
+networks:
+  bookleaf-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

@@ -5,6 +5,12 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import {
+  sampleRoyaltyRecords,
+  sampleTickets,
+  sampleReplies,
+  sampleInternalNotes,
+} from "./seed-data.js";
 
 const prisma = new PrismaClient();
 
@@ -125,14 +131,62 @@ async function main() {
     }
   }
 
+  // Seed sample royalty statements matching book-level totals
+  for (const record of sampleRoyaltyRecords) {
+    const { id, ...data } = record;
+    await prisma.royaltyRecord.upsert({
+      where: { id },
+      update: data,
+      create: record,
+    });
+  }
+
+  // Seed sample support tickets across authors, statuses, categories, and priorities
+  for (const ticket of sampleTickets) {
+    const { id, ...data } = ticket;
+    await prisma.ticket.upsert({
+      where: { id },
+      update: data,
+      create: ticket,
+    });
+  }
+
+  // Seed sample replies
+  for (const reply of sampleReplies) {
+    const { id, ...data } = reply;
+    await prisma.ticketReply.upsert({
+      where: { id },
+      update: data,
+      create: reply,
+    });
+  }
+
+  // Seed sample internal notes
+  for (const note of sampleInternalNotes) {
+    const { id, ...data } = note;
+    await prisma.ticketInternalNote.upsert({
+      where: { id },
+      update: data,
+      create: note,
+    });
+  }
+
   const authorCount = await prisma.user.count({
     where: { role: "AUTHOR" },
   });
   const bookCount = await prisma.book.count();
+  const ticketCount = await prisma.ticket.count();
+  const replyCount = await prisma.ticketReply.count();
+  const noteCount = await prisma.ticketInternalNote.count();
+  const royaltyCount = await prisma.royaltyRecord.count();
 
   console.log("Sample data seeded successfully.");
   console.log(`Authors: ${authorCount}`);
   console.log(`Books: ${bookCount}`);
+  console.log(`Tickets: ${ticketCount}`);
+  console.log(`Replies: ${replyCount}`);
+  console.log(`Internal notes: ${noteCount}`);
+  console.log(`Royalty records: ${royaltyCount}`);
   console.log("Demo admin: admin@bookleaf.demo");
   console.log(`Demo password: ${DEMO_PASSWORD}`);
 }
