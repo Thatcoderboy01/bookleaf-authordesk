@@ -38,7 +38,10 @@ export default function Sidebar({ navigation, user, logout }) {
             <strong>{user.name}</strong>
             <span>{user.role === "ADMIN" ? "Administrator" : "Author account"}</span>
           </div>
-          <button className="profile-menu" onClick={logout} type="button">Log out</button>
+          <button className="profile-menu" onClick={logout} type="button" aria-label="Log out" title="Log out">
+            <span className="logout-text">Log out</span>
+            <span className="logout-icon" aria-hidden="true">↪</span>
+          </button>
         </div>
       </div>
     </aside>

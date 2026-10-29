@@ -126,7 +126,9 @@ export default function MyRoyaltiesPage() {
         </div>
 
         {records.length === 0 ? (
-          <div className="table-empty-state">No royalty records are available yet.</div>
+          <div className="table-empty-state">
+            <p>No royalty records are available yet.</p>
+          </div>
         ) : (
           <div className="ticket-table-wrap">
             <table className="ticket-table royalty-table">

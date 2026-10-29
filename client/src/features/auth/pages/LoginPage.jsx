@@ -89,6 +89,7 @@ export default function LoginPage() {
             id="email"
             name="email"
             onChange={handleChange}
+            placeholder="name@example.com"
             type="email"
             value={form.email}
             autoComplete="email"
@@ -102,6 +103,7 @@ export default function LoginPage() {
             id="password"
             name="password"
             onChange={handleChange}
+            placeholder="••••••••"
             type="password"
             value={form.password}
             autoComplete="current-password"

@@ -7,7 +7,11 @@ function formatDate(value) {
 
 export default function TicketConversation({ replies }) {
   if (replies.length === 0) {
-    return <div className="conversation-empty">No replies yet. Our support team will respond here.</div>;
+    return (
+      <div className="conversation-empty">
+        <p>No replies yet. Our support team will respond here.</p>
+      </div>
+    );
   }
 
   return (
