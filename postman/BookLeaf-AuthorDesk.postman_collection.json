@@ -1,0 +1,644 @@
+{
+  "info": {
+    "_postman_id": "b1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    "name": "BookLeaf AuthorDesk API",
+    "description": "Comprehensive API collection for testing BookLeaf AuthorDesk, covering authentication, author catalog, royalties, support tickets, admin triage, and grounded AI drafts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Public health check endpoint verifying server status and environment."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var response = pm.response.json();",
+                  "if (response.success && response.data && response.data.accessToken) {",
+                  "    pm.environment.set(\"adminToken\", response.data.accessToken);",
+                  "    console.log(\"Saved adminToken successfully.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@bookleaf.demo\",\n  \"password\": \"Demo@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as the demo admin account and saves the access token to {{adminToken}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Author",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var response = pm.response.json();",
+                  "if (response.success && response.data && response.data.accessToken) {",
+                  "    pm.environment.set(\"authorToken\", response.data.accessToken);",
+                  "    console.log(\"Saved authorToken successfully.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"priya.sharma@email.com\",\n  \"password\": \"Demo@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates as a seeded demo author and saves the access token to {{authorToken}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Register New Author",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Author\",\n  \"email\": \"test.author@example.com\",\n  \"password\": \"AuthorPass@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a new author account with role AUTHOR."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Author Books",
+      "item": [
+        {
+          "name": "List Author Books",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var response = pm.response.json();",
+                  "if (response.success && Array.isArray(response.data) && response.data.length > 0) {",
+                  "    pm.environment.set(\"bookId\", response.data[0].id);",
+                  "    console.log(\"Saved first bookId: \" + response.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            },
+            "description": "Lists books belonging to the authenticated author and captures the first bookId into the environment."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Book Details by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/books/{{bookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "{{bookId}}"]
+            },
+            "description": "Retrieves publication details and royalty performance for a specific book."
+          },
+          "response": []
+        },
+        {
+          "name": "List All Books (Admin View)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            },
+            "description": "Lists all books across the catalog when accessed by an administrator."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Royalties",
+      "item": [
+        {
+          "name": "Get Royalty Records (Author)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/royalties",
+              "host": ["{{baseUrl}}"],
+              "path": ["royalties"]
+            },
+            "description": "Lists granular quarterly royalty records for the authenticated author."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Royalty Summary (Author)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/royalties/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["royalties", "summary"]
+            },
+            "description": "Returns calculated earnings summary: totalEarned, totalPaid, and totalPending."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Support Tickets",
+      "item": [
+        {
+          "name": "Create Support Ticket",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var response = pm.response.json();",
+                  "if (response.success && response.data && response.data.id) {",
+                  "    pm.environment.set(\"ticketId\", response.data.id);",
+                  "    console.log(\"Saved new ticketId: \" + response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Inquiry regarding Q3 royalty disbursement\",\n  \"description\": \"Hello support team, I would like to check the payout date for my Q3 royalties for Whispers of the Ganges. Thank you.\",\n  \"bookId\": \"{{bookId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets"]
+            },
+            "description": "Creates a support ticket as an author, triggers async AI classification, and stores ticketId."
+          },
+          "response": []
+        },
+        {
+          "name": "List Author Tickets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lists tickets created by the authenticated author with pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket Details (Author)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}"]
+            },
+            "description": "Retrieves ticket conversation details. Author view strips internal notes and AI draft fields."
+          },
+          "response": []
+        },
+        {
+          "name": "List Ticket Replies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/replies",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "replies"]
+            },
+            "description": "Fetches the message thread for a ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "Post Ticket Reply (Author)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authorToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Thank you. My bank details are updated in the profile dashboard.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/replies",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "replies"]
+            },
+            "description": "Appends an author reply to the ticket conversation."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Admin Ticket Management",
+      "item": [
+        {
+          "name": "Admin Ticket Queue (Filtered & Sorted)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?status=OPEN&sortBy=priority&sortOrder=desc&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "priority"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Retrieves admin triage queue with semantic highest-priority sorting (CRITICAL -> LOW)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket Details with Context (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}"]
+            },
+            "description": "Retrieves ticket details enriched with author contact info (phone, city), linked book context, and saved AI draft."
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Ticket to Self",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/assign-to-me",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "assign-to-me"]
+            },
+            "description": "Assigns the ticket to the authenticated admin."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ticket Status & Priority",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"HIGH\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}"]
+            },
+            "description": "Updates ticket status and priority as an administrator."
+          },
+          "response": []
+        },
+        {
+          "name": "List Internal Notes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/internal-notes",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "internal-notes"]
+            },
+            "description": "Lists staff-only internal notes for a ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Internal Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Escalated to finance desk with 48h resolution SLA per BookLeaf royalty policy.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/internal-notes",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "internal-notes"]
+            },
+            "description": "Creates an internal administrative note invisible to the author."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. AI Drafts",
+      "item": [
+        {
+          "name": "Generate AI Response Draft",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/ai-draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "ai-draft"]
+            },
+            "description": "Generates a grounded response draft using BookLeaf knowledge base policies and saves it to the ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Saved AI Draft",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"draft\": \"Dear Priya,\\n\\nThank you for contacting BookLeaf Publishing. We have reviewed your account and confirmed that Q3 royalties are being processed. Our finance team will complete the transfer within 48 hours.\\n\\nWarm regards,\\nBookLeaf Support Desk\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/ai-draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "ai-draft"]
+            },
+            "description": "Edits the persisted AI draft before sending it to the author."
+          },
+          "response": []
+        },
+        {
+          "name": "Send AI Draft as Reply",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/ai-draft/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["tickets", "{{ticketId}}", "ai-draft", "send"]
+            },
+            "description": "Atomically converts the saved AI draft into an official ticket reply and clears the draft."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    }
+  ]
+}
