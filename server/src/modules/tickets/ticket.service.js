@@ -14,6 +14,23 @@ export async function generateTicketDraft(ticketId) {
       category: true,
       aiSuggestedCategory: true,
       priority: true,
+      author: {
+        select: {
+          name: true,
+        },
+      },
+      book: {
+        select: {
+          title: true,
+          isbn: true,
+          status: true,
+          publicationDate: true,
+          totalCopiesSold: true,
+          totalRoyaltyEarned: true,
+          royaltyPaid: true,
+          royaltyPending: true,
+        },
+      },
     },
   });
 
