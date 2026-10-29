@@ -16,7 +16,7 @@ function label(value) {
     : "All";
 }
 
-export default function TicketFilters({ filters, onChange }) {
+export default function TicketFilters({ children, filters, onChange }) {
   return (
     <div className="ticket-filters">
       <label>
@@ -45,6 +45,7 @@ export default function TicketFilters({ filters, onChange }) {
         To
         <input name="to" onChange={onChange} type="date" value={filters.to} />
       </label>
+      {children}
     </div>
   );
 }

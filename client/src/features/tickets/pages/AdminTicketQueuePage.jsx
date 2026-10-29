@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import TicketCard from "../components/TicketCard.jsx";
 import TicketFilters from "../components/TicketFilters.jsx";
+import { getSortOption, parseSortValue, SORT_OPTIONS } from "../ticket-sort.js";
 import { getTickets } from "../tickets.api.js";
 import { routes } from "../../../app/router.jsx";
 
@@ -64,9 +65,21 @@ export default function AdminTicketQueuePage() {
     }));
   }
 
+  function handleSortChange(event) {
+    const selected = parseSortValue(event.target.value);
+    setFilters((current) => ({
+      ...current,
+      page: 1,
+      sortBy: selected.sortBy,
+      sortOrder: selected.sortOrder,
+    }));
+  }
+
   function movePage(page) {
     setFilters((current) => ({ ...current, page }));
   }
+
+  const currentSortValue = getSortOption(filters.sortBy, filters.sortOrder).value;
 
   return (
     <div className="page-content">
@@ -77,7 +90,23 @@ export default function AdminTicketQueuePage() {
           <p>Review and triage incoming author support requests.</p>
         </div>
       </section>
-      <TicketFilters filters={filters} onChange={handleFilterChange} />
+      <TicketFilters filters={filters} onChange={handleFilterChange}>
+        <label>
+          Sort by
+          <select
+            aria-label="Sort tickets by"
+            name="sort"
+            onChange={handleSortChange}
+            value={currentSortValue}
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </TicketFilters>
       {isLoading ? (
         <div className="loading-state">Loading ticket queue...</div>
       ) : error ? (

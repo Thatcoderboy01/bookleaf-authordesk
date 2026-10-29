@@ -194,9 +194,25 @@ export async function getTickets(user, filters = {}) {
       : {}),
   };
 
-  const orderBy = {
-    [sortBy]: sortOrder,
-  };
+  let orderBy;
+
+  if (sortBy === "priority") {
+    // In MySQL, ENUM('CRITICAL', 'HIGH', 'MEDIUM', 'LOW') values are indexed by declaration order:
+    // 1: CRITICAL, 2: HIGH, 3: MEDIUM, 4: LOW.
+    // - Highest priority first (CRITICAL -> HIGH -> MEDIUM -> LOW) requires MySQL enum ASC (1 -> 4).
+    // - Lowest priority first (LOW -> MEDIUM -> HIGH -> CRITICAL) requires MySQL enum DESC (4 -> 1).
+    // An explicit secondary sort on createdAt DESC ensures deterministic ordering for tickets with equal priority.
+    const prismaPriorityOrder = sortOrder === "desc" ? "asc" : "desc";
+    orderBy = [
+      { priority: prismaPriorityOrder },
+      { createdAt: "desc" },
+    ];
+  } else {
+    orderBy = [
+      { [sortBy]: sortOrder },
+      ...(sortBy !== "createdAt" ? [{ createdAt: "desc" }] : []),
+    ];
+  }
 
   const skip = (page - 1) * limit;
 
