@@ -251,6 +251,8 @@ export default function AdminTicketDetailsPage({ ticketId }) {
       <AiResponseDraft
         key={ticketId}
         ticketId={ticketId}
+        ticketStatus={ticket.status}
+        userRole="ADMIN"
         initialDraft={ticket.aiDraftResponse || ""}
         onReplySent={(createdReply) => {
           setReplies((current) => [...current, createdReply]);

@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { generateTicketDraft, sendTicketDraft, updateTicketDraft } from "../tickets.api.js";
+import {
+  finishInFlightGeneration,
+  hasAttemptedAutoGeneration,
+  hasInFlightGeneration,
+  markAttemptedAutoGeneration,
+  startInFlightGeneration,
+} from "../ai-draft-session.js";
 
 export default function AiResponseDraft({
   ticketId,
   initialDraft = "",
+  ticketStatus = "OPEN",
+  userRole = "ADMIN",
   onReplySent,
   onDraftUpdated,
 }) {
@@ -22,6 +31,7 @@ export default function AiResponseDraft({
     activeTicketIdRef.current = ticketId;
   }, [ticketId]);
 
+  // Adjust state at render time when switching tickets or receiving a new initial draft
   if (ticketId !== prevTicketId || initialDraft !== prevInitialDraft) {
     setPrevTicketId(ticketId);
     setPrevInitialDraft(initialDraft);
@@ -30,8 +40,72 @@ export default function AiResponseDraft({
     setNotice("");
   }
 
+  // Automatic AI draft presentation on ticket open
+  useEffect(() => {
+    activeTicketIdRef.current = ticketId;
+
+    const hasSavedDraft = Boolean(initialDraft && initialDraft.trim());
+    const isEligibleStatus = ticketStatus === "OPEN" || ticketStatus === "IN_PROGRESS";
+    const isAdmin = userRole === "ADMIN";
+
+    // Auto-generate only when:
+    // 1. No saved draft exists
+    // 2. Ticket status is OPEN or IN_PROGRESS (never for RESOLVED or CLOSED)
+    // 3. Current user is an authenticated ADMIN
+    // 4. Has not already been attempted or currently in-flight for this ticket
+    if (
+      !hasSavedDraft &&
+      isEligibleStatus &&
+      isAdmin &&
+      !hasAttemptedAutoGeneration(ticketId) &&
+      !hasInFlightGeneration(ticketId)
+    ) {
+      markAttemptedAutoGeneration(ticketId);
+      startInFlightGeneration(ticketId);
+
+      const requestTicketId = ticketId;
+      let isCurrent = true;
+
+      queueMicrotask(async () => {
+        if (!isCurrent || activeTicketIdRef.current !== requestTicketId) {
+          finishInFlightGeneration(requestTicketId);
+          return;
+        }
+
+        setIsGenerating(true);
+        setError("");
+        setNotice("");
+
+        try {
+          const generatedDraft = await generateTicketDraft(requestTicketId);
+          if (!isCurrent || activeTicketIdRef.current !== requestTicketId) return;
+          const nextDraft = generatedDraft?.aiDraftResponse || "";
+          setDraft(nextDraft);
+          setNotice("AI draft generated automatically. Review and edit it before sending.");
+          onDraftUpdated?.(nextDraft);
+        } catch (requestError) {
+          if (!isCurrent || activeTicketIdRef.current !== requestTicketId) return;
+          setError(requestError.message || "Unable to generate an AI draft.");
+        } finally {
+          finishInFlightGeneration(requestTicketId);
+          if (isCurrent && activeTicketIdRef.current === requestTicketId) {
+            setIsGenerating(false);
+          }
+        }
+      });
+
+      return () => {
+        isCurrent = false;
+        finishInFlightGeneration(requestTicketId);
+      };
+    }
+  }, [ticketId, initialDraft, ticketStatus, userRole, onDraftUpdated]);
+
   async function handleGenerate() {
     const requestTicketId = ticketId;
+    markAttemptedAutoGeneration(requestTicketId);
+    startInFlightGeneration(requestTicketId);
+
     setIsGenerating(true);
     setError("");
     setNotice("");
@@ -46,6 +120,7 @@ export default function AiResponseDraft({
       if (activeTicketIdRef.current !== requestTicketId) return;
       setError(requestError.message || "Unable to generate an AI draft.");
     } finally {
+      finishInFlightGeneration(requestTicketId);
       if (activeTicketIdRef.current === requestTicketId) {
         setIsGenerating(false);
       }
@@ -129,7 +204,24 @@ export default function AiResponseDraft({
           {isGenerating ? "Generating..." : "Generate draft"}
         </button>
       </div>
-      {error && <div className="form-error ai-draft-message" role="alert">{error}</div>}
+      {isGenerating && (
+        <div className="ai-draft-generating" role="status">
+          Generating AI response draft...
+        </div>
+      )}
+      {error && (
+        <div className="form-error ai-draft-message" role="alert">
+          <span>{error}</span>
+          <button
+            className="text-button inline-retry"
+            disabled={isGenerating}
+            onClick={handleGenerate}
+            type="button"
+          >
+            Try again
+          </button>
+        </div>
+      )}
       {notice && <div className="ai-draft-notice" role="status">{notice}</div>}
       <div className="ai-draft-body">
         <textarea
@@ -140,7 +232,11 @@ export default function AiResponseDraft({
             setError("");
             setNotice("");
           }}
-          placeholder="Generated AI response will appear here..."
+          placeholder={
+            isGenerating
+              ? "Generating AI response draft..."
+              : "Generated AI response will appear here..."
+          }
           rows="7"
           value={draft}
         />
