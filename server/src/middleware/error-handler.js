@@ -1,3 +1,4 @@
+import { ApiError } from "../utils/ApiError.js";
 
 function errorHandler(err, req, res, next) {
   if (res.headersSent) {
@@ -5,6 +6,7 @@ function errorHandler(err, req, res, next) {
   }
 
   const isZodError = err?.name === "ZodError";
+  const isApiError = err instanceof ApiError || err?.name === "ApiError";
 
   const statusCode = isZodError
     ? 400
@@ -18,19 +20,23 @@ function errorHandler(err, req, res, next) {
         ? err.status
         : 500;
 
-  if (statusCode >= 500) {
+  if (statusCode >= 500 && !isApiError) {
     console.error(err);
   }
 
   const errorMessage = isZodError
     ? err.issues.map((issue) => issue.message).join(", ")
-    : statusCode >= 500
-      ? "Internal server error"
-      : err.message || "Request failed";
+    : isApiError
+      ? err.message
+      : statusCode >= 500
+        ? "Internal server error"
+        : err.message || "Request failed";
 
   return res.status(statusCode).json({
     success: false,
     message: errorMessage,
+    ...(err?.code ? { code: err.code } : {}),
+    ...(err?.retryHint ? { retryHint: err.retryHint } : {}),
   });
 }
 

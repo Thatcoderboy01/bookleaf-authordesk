@@ -12,6 +12,11 @@ function isRetryable(error) {
   const message = String(error?.message || error);
   const status = error?.status ?? error?.statusCode;
 
+  // Daily quota exhaustion cannot be resolved by immediate retries
+  if (/GenerateRequestsPerDay|quota\s*exceeded|daily\s*limit/i.test(message)) {
+    return false;
+  }
+
   return (
     [408, 429, 500, 502, 503, 504].includes(Number(status)) ||
     /\b(408|429|500|502|503|504)\b/.test(message) ||

@@ -329,7 +329,11 @@ h1, h2, h3, h4 {
 .ai-draft-panel { margin-top: 20px; overflow: hidden; }
 .ai-draft-message, .ai-draft-notice { margin: 0 20px 12px; }
 .ai-draft-generating { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 11px; margin: 0 20px 12px; padding: 10px 12px; }
-.inline-retry { font-size: 11px; margin-left: 8px; text-decoration: underline; padding: 0; }
+.ai-draft-error-header { color: #991b1b; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+.ai-draft-error-text { color: #7f1d1d; font-size: 11px; line-height: 1.5; margin: 0 0 6px; }
+.ai-draft-retry-hint { color: #854d0e; font-size: 10px; font-weight: 600; margin: 0 0 6px; }
+.ai-draft-error-actions { display: flex; align-items: center; gap: 8px; }
+.inline-retry { font-size: 11px; margin-left: 0; text-decoration: underline; padding: 0; }
 .ai-draft-notice { background: #ecfdf5; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 11px; padding: 10px 12px; }
 .ai-draft-body { display: grid; gap: 10px; padding: 0 20px 20px; }
 .ai-draft-body textarea { border: 1px solid var(--border); border-radius: 8px; min-height: 140px; padding: 10px; resize: vertical; }

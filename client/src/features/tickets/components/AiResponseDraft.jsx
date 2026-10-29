@@ -8,6 +8,28 @@ import {
   startInFlightGeneration,
 } from "../ai-draft-session.js";
 
+function extractErrorDetails(requestError) {
+  const message =
+    requestError?.message ||
+    "Unable to generate an AI draft right now. Please try again.";
+  const code = requestError?.data?.code || requestError?.code || null;
+  const retryHint =
+    requestError?.data?.retryHint || requestError?.retryHint || null;
+
+  let heading = "Unable to Generate AI Draft";
+  if (code === "AI_QUOTA_EXCEEDED") {
+    heading = "AI Quota Limit Reached";
+  } else if (code === "AI_CONFIGURATION_ERROR") {
+    heading = "AI Configuration Issue";
+  } else if (code === "AI_PROVIDER_UNAVAILABLE") {
+    heading = "AI Service Temporarily Unavailable";
+  } else if (code === "AI_INVALID_RESPONSE") {
+    heading = "AI Response Format Error";
+  }
+
+  return { heading, message, code, retryHint };
+}
+
 export default function AiResponseDraft({
   ticketId,
   initialDraft = "",
@@ -22,7 +44,7 @@ export default function AiResponseDraft({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState("");
+  const [errorInfo, setErrorInfo] = useState(null);
   const [notice, setNotice] = useState("");
 
   const activeTicketIdRef = useRef(ticketId);
@@ -36,7 +58,7 @@ export default function AiResponseDraft({
     setPrevTicketId(ticketId);
     setPrevInitialDraft(initialDraft);
     setDraft(initialDraft || "");
-    setError("");
+    setErrorInfo(null);
     setNotice("");
   }
 
@@ -73,7 +95,7 @@ export default function AiResponseDraft({
         }
 
         setIsGenerating(true);
-        setError("");
+        setErrorInfo(null);
         setNotice("");
 
         try {
@@ -85,7 +107,7 @@ export default function AiResponseDraft({
           onDraftUpdated?.(nextDraft);
         } catch (requestError) {
           if (!isCurrent || activeTicketIdRef.current !== requestTicketId) return;
-          setError(requestError.message || "Unable to generate an AI draft.");
+          setErrorInfo(extractErrorDetails(requestError));
         } finally {
           finishInFlightGeneration(requestTicketId);
           if (isCurrent && activeTicketIdRef.current === requestTicketId) {
@@ -107,7 +129,7 @@ export default function AiResponseDraft({
     startInFlightGeneration(requestTicketId);
 
     setIsGenerating(true);
-    setError("");
+    setErrorInfo(null);
     setNotice("");
     try {
       const generatedDraft = await generateTicketDraft(requestTicketId);
@@ -118,7 +140,7 @@ export default function AiResponseDraft({
       onDraftUpdated?.(nextDraft);
     } catch (requestError) {
       if (activeTicketIdRef.current !== requestTicketId) return;
-      setError(requestError.message || "Unable to generate an AI draft.");
+      setErrorInfo(extractErrorDetails(requestError));
     } finally {
       finishInFlightGeneration(requestTicketId);
       if (activeTicketIdRef.current === requestTicketId) {
@@ -131,16 +153,26 @@ export default function AiResponseDraft({
     const requestTicketId = ticketId;
     const trimmedDraft = draft.trim();
     if (trimmedDraft.length < 20) {
-      setError("Draft must be at least 20 characters.");
+      setErrorInfo({
+        heading: "Draft Validation Error",
+        message: "Draft must be at least 20 characters.",
+        code: "VALIDATION_ERROR",
+        retryHint: null,
+      });
       return;
     }
     if (trimmedDraft.length > 5000) {
-      setError("Draft must not exceed 5000 characters.");
+      setErrorInfo({
+        heading: "Draft Validation Error",
+        message: "Draft must not exceed 5000 characters.",
+        code: "VALIDATION_ERROR",
+        retryHint: null,
+      });
       return;
     }
 
     setIsSaving(true);
-    setError("");
+    setErrorInfo(null);
     setNotice("");
     try {
       const savedDraft = await updateTicketDraft(requestTicketId, trimmedDraft);
@@ -151,7 +183,7 @@ export default function AiResponseDraft({
       onDraftUpdated?.(nextDraft);
     } catch (requestError) {
       if (activeTicketIdRef.current !== requestTicketId) return;
-      setError(requestError.message || "Unable to save the draft.");
+      setErrorInfo(extractErrorDetails(requestError));
     } finally {
       if (activeTicketIdRef.current === requestTicketId) {
         setIsSaving(false);
@@ -162,12 +194,17 @@ export default function AiResponseDraft({
   async function handleSend() {
     const requestTicketId = ticketId;
     if (!draft.trim()) {
-      setError("Generate or save a draft before sending.");
+      setErrorInfo({
+        heading: "Draft Missing",
+        message: "Generate or save a draft before sending.",
+        code: "VALIDATION_ERROR",
+        retryHint: null,
+      });
       return;
     }
 
     setIsSending(true);
-    setError("");
+    setErrorInfo(null);
     setNotice("");
     try {
       const reply = await sendTicketDraft(requestTicketId);
@@ -180,7 +217,7 @@ export default function AiResponseDraft({
     } catch (requestError) {
       if (activeTicketIdRef.current !== requestTicketId) return;
       // Preserve draft in the UI when sending fails
-      setError(requestError.message || "Unable to send the AI draft.");
+      setErrorInfo(extractErrorDetails(requestError));
     } finally {
       if (activeTicketIdRef.current === requestTicketId) {
         setIsSending(false);
@@ -209,17 +246,28 @@ export default function AiResponseDraft({
           Generating AI response draft...
         </div>
       )}
-      {error && (
+      {errorInfo && (
         <div className="form-error ai-draft-message" role="alert">
-          <span>{error}</span>
-          <button
-            className="text-button inline-retry"
-            disabled={isGenerating}
-            onClick={handleGenerate}
-            type="button"
-          >
-            Try again
-          </button>
+          <div className="ai-draft-error-header">
+            <strong>{errorInfo.heading}</strong>
+          </div>
+          <p className="ai-draft-error-text">{errorInfo.message}</p>
+          {errorInfo.retryHint && (
+            <p className="ai-draft-retry-hint">
+              <span aria-hidden="true">⏱ </span>
+              {errorInfo.retryHint}
+            </p>
+          )}
+          <div className="ai-draft-error-actions">
+            <button
+              className="text-button inline-retry"
+              disabled={isGenerating}
+              onClick={handleGenerate}
+              type="button"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       )}
       {notice && <div className="ai-draft-notice" role="status">{notice}</div>}
@@ -229,7 +277,7 @@ export default function AiResponseDraft({
           maxLength="5000"
           onChange={(event) => {
             setDraft(event.target.value);
-            setError("");
+            setErrorInfo(null);
             setNotice("");
           }}
           placeholder={

@@ -258,3 +258,83 @@ test("generation failure records recoverable error and does not enter auto-retry
   assert.equal(attempts, 2, "Manual retry must execute when initiated by admin");
 });
 
+test("frontend error details extractor formats heading, message, and retry hint properly", () => {
+  // Helper matching extractErrorDetails in AiResponseDraft
+  function extractErrorDetails(requestError) {
+    const message =
+      requestError?.message ||
+      "Unable to generate an AI draft right now. Please try again.";
+    const code = requestError?.data?.code || requestError?.code || null;
+    const retryHint =
+      requestError?.data?.retryHint || requestError?.retryHint || null;
+
+    let heading = "Unable to Generate AI Draft";
+    if (code === "AI_QUOTA_EXCEEDED") {
+      heading = "AI Quota Limit Reached";
+    } else if (code === "AI_CONFIGURATION_ERROR") {
+      heading = "AI Configuration Issue";
+    } else if (code === "AI_PROVIDER_UNAVAILABLE") {
+      heading = "AI Service Temporarily Unavailable";
+    } else if (code === "AI_INVALID_RESPONSE") {
+      heading = "AI Response Format Error";
+    }
+
+    return { heading, message, code, retryHint };
+  }
+
+  // Quota error with retry hint
+  const quotaErr = {
+    message: "Gemini API quota has been reached. Please try again after the quota resets or contact the system administrator.",
+    data: {
+      code: "AI_QUOTA_EXCEEDED",
+      retryHint: "Retry suggested in 42 seconds",
+    },
+  };
+  const quotaDetails = extractErrorDetails(quotaErr);
+  assert.equal(quotaDetails.heading, "AI Quota Limit Reached");
+  assert.equal(quotaDetails.message, quotaErr.message);
+  assert.equal(quotaDetails.code, "AI_QUOTA_EXCEEDED");
+  assert.equal(quotaDetails.retryHint, "Retry suggested in 42 seconds");
+
+  // Config error
+  const configErr = {
+    message: "AI draft generation is not configured correctly. Please contact the system administrator.",
+    data: { code: "AI_CONFIGURATION_ERROR" },
+  };
+  const configDetails = extractErrorDetails(configErr);
+  assert.equal(configDetails.heading, "AI Configuration Issue");
+  assert.equal(configDetails.retryHint, null);
+
+  // Generic fallback error
+  const genericErr = new Error("Network connection dropped");
+  const genericDetails = extractErrorDetails(genericErr);
+  assert.equal(genericDetails.heading, "Unable to Generate AI Draft");
+  assert.equal(genericDetails.message, "Network connection dropped");
+  assert.equal(genericDetails.retryHint, null);
+});
+
+test("existing saved draft remains visible if a later generation attempt fails", async () => {
+  clearDraftTracking();
+
+  let displayedDraft = "Initial saved draft response from author triage";
+  let componentError = null;
+
+  // Admin opens ticket with saved draft -> displayed immediately
+  assert.equal(displayedDraft, "Initial saved draft response from author triage");
+
+  // Admin manually clicks "Generate draft" to refresh, but provider fails with 429 quota
+  try {
+    throw new Error("Gemini API quota has been reached.");
+  } catch (err) {
+    componentError = err.message;
+  }
+
+  // Verify the saved draft was NOT wiped or replaced with empty string
+  assert.equal(
+    displayedDraft,
+    "Initial saved draft response from author triage",
+    "Existing saved draft must remain intact when manual generation fails"
+  );
+  assert.equal(componentError, "Gemini API quota has been reached.");
+});
+

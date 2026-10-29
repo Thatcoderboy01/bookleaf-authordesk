@@ -123,7 +123,20 @@ ${knowledge}
     try {
       parsed = JSON.parse(jsonText);
     } catch {
-      throw new Error("AI returned invalid JSON for response draft");
+      // Bounded single repair attempt without extra API calls:
+      // If the model wrapped the JSON in commentary or conversational preamble:
+      const firstBrace = jsonText.indexOf("{");
+      const lastBrace = jsonText.lastIndexOf("}");
+
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        try {
+          parsed = JSON.parse(jsonText.slice(firstBrace, lastBrace + 1));
+        } catch {
+          throw new Error("AI returned invalid JSON for response draft");
+        }
+      } else {
+        throw new Error("AI returned invalid JSON for response draft");
+      }
     }
 
     const result = draftSchema.safeParse(parsed);

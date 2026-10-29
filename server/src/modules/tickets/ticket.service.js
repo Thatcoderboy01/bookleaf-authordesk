@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import prisma from "../../config/database.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { classifyTicket } from "../ai/classification.service.js";
+import { normalizeAIError } from "../ai/ai-errors.js";
 
 
 export async function generateTicketDraft(ticketId) {
@@ -48,11 +49,7 @@ export async function generateTicketDraft(ticketId) {
     result = await generateTicketResponse(ticket);
   } catch (error) {
     console.error("AI ticket draft generation failed:", error.message);
-
-    throw new ApiError(
-      502,
-      "Unable to generate an AI draft right now. Please try again."
-    );
+    throw normalizeAIError(error);
   }
 
   return prisma.ticket.update({
