@@ -228,6 +228,19 @@ export async function getTickets(user, filters = {}) {
         assignedToId: true,
         createdAt: true,
         updatedAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        book: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       },
     }),
     prisma.ticket.count({ where }),
@@ -272,6 +285,28 @@ export async function getTicketById(ticketId, user) {
       createdAt: true,
       updatedAt: true,
       resolvedAt: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          ...(user.role === "ADMIN"
+            ? {
+                phone: true,
+                city: true,
+              }
+            : {}),
+        },
+      },
+      book: {
+        select: {
+          id: true,
+          title: true,
+          isbn: true,
+          status: true,
+          publicationDate: true,
+        },
+      },
     },
   });
 

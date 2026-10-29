@@ -261,6 +261,9 @@ h1, h2, h3, h4 {
 .author-ticket-card:hover { border-color: #b9b5f7; transform: translateY(-1px); }
 .author-ticket-card h2 { font-size: 14px; margin: 3px 0 6px; }
 .author-ticket-card p { color: var(--muted); font-size: 10px; margin: 0; }
+.ticket-card-content { min-width: 0; }
+.ticket-card-header { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 2px; }
+.ticket-card-author { color: var(--muted); font-size: 11px; }
 .author-ticket-meta { align-items: flex-end; display: flex; flex-direction: column; gap: 8px; }
 .ticket-form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 8px; max-width: 720px; padding: 24px; }
 .ticket-form input, .ticket-form select, .ticket-form textarea { width: 100%; }
@@ -303,6 +306,13 @@ h1, h2, h3, h4 {
 .classification-note { grid-column: 1 / -1; }
 .classification-note p, .ai-classification-empty { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 0; }
 .ai-classification-empty { padding: 0 20px 20px; }
+.author-book-context-panel { margin-top: 20px; overflow: hidden; }
+.author-book-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 20px 20px; }
+.context-card { background: #fbfbfd; border: 1px solid var(--border); border-radius: 9px; padding: 16px; }
+.context-card h3 { color: var(--text); font-size: 12px; font-weight: 700; letter-spacing: -.2px; margin: 0 0 12px; }
+.no-book-linked { align-items: center; display: flex; flex-direction: column; justify-content: center; min-height: 140px; text-align: center; gap: 8px; }
+.no-book-badge { background: #f1f2f6; border-radius: 6px; color: var(--muted); font-size: 10px; font-weight: 600; padding: 4px 10px; }
+.no-book-linked p { color: var(--muted); font-size: 11px; margin: 0; }
 .internal-notes-panel { margin-top: 20px; overflow: hidden; }
 .internal-notes-list { display: grid; gap: 10px; padding: 0 20px 20px; }
 .internal-note { background: #fff8e7; border: 1px solid #f6e5b7; border-radius: 8px; padding: 12px; }
@@ -412,7 +422,7 @@ h1, h2, h3, h4 {
   .right-column { grid-template-columns: minmax(0, 1fr); }
   .ticket-table { min-width: 640px; }
   .page-footer { font-size: 9px; }
-  .admin-ticket-layout, .book-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-ticket-layout, .book-detail-grid, .author-book-grid { grid-template-columns: minmax(0, 1fr); }
   .author-ticket-card { align-items: flex-start; flex-direction: column; gap: 14px; }
   .author-ticket-meta { align-items: flex-start; flex-direction: row; }
   .books-heading { flex-direction: column; gap: 12px; }
@@ -509,6 +519,16 @@ h1, h2, h3, h4 {
 }
 
 .app-shell[data-layout="admin"] .priority.critical {
+  color: var(--admin-link);
+}
+
+.app-shell[data-layout="admin"] .context-card {
+  background: #fffafa;
+  border-color: #fce4e8;
+}
+
+.app-shell[data-layout="admin"] .no-book-badge {
+  background: var(--admin-light);
   color: var(--admin-link);
 }
 

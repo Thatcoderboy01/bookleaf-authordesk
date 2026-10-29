@@ -27,6 +27,11 @@ function label(value) {
   return value.split("_").map((part) => part.charAt(0) + part.slice(1).toLowerCase()).join(" ");
 }
 
+function formatDate(value) {
+  if (!value) return "Not available";
+  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(value));
+}
+
 export default function AdminTicketDetailsPage({ ticketId }) {
   const [ticket, setTicket] = useState(null);
   const [replies, setReplies] = useState([]);
@@ -154,6 +159,65 @@ export default function AdminTicketDetailsPage({ ticketId }) {
       <a className="text-button" href={routes.adminTickets.path}>← Back to queue</a>
       <section className="ticket-detail-heading"><div><span className="eyebrow">{ticket.id}</span><h1>{ticket.subject}</h1><p>{ticket.description}</p></div></section>
       {actionError && <div className="form-error" role="alert">{actionError}</div>}
+      <section className="panel author-book-context-panel">
+        <div className="panel-heading">
+          <div>
+            <h2>Author & Book Context</h2>
+            <p>Author identity and linked publication details for triage and response grounding.</p>
+          </div>
+        </div>
+        <div className="author-book-grid">
+          <article className="context-card">
+            <h3>Author details</h3>
+            <dl className="book-detail-list">
+              <div>
+                <dt>Name</dt>
+                <dd>{ticket.author?.name || "Unknown author"}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{ticket.author?.email || "Not provided"}</dd>
+              </div>
+              <div>
+                <dt>Phone</dt>
+                <dd>{ticket.author?.phone || "Not provided"}</dd>
+              </div>
+              <div>
+                <dt>City</dt>
+                <dd>{ticket.author?.city || "Not provided"}</dd>
+              </div>
+            </dl>
+          </article>
+          <article className="context-card">
+            <h3>Linked book</h3>
+            {ticket.book ? (
+              <dl className="book-detail-list">
+                <div>
+                  <dt>Title</dt>
+                  <dd>{ticket.book.title}</dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{label(ticket.book.status)}</dd>
+                </div>
+                <div>
+                  <dt>ISBN</dt>
+                  <dd>{ticket.book.isbn || "Pending assignment"}</dd>
+                </div>
+                <div>
+                  <dt>Publication date</dt>
+                  <dd>{formatDate(ticket.book.publicationDate)}</dd>
+                </div>
+              </dl>
+            ) : (
+              <div className="no-book-linked">
+                <span className="no-book-badge">General inquiry</span>
+                <p>No specific book linked to this ticket.</p>
+              </div>
+            )}
+          </article>
+        </div>
+      </section>
       <section className="admin-ticket-layout">
         <article className="panel admin-controls">
           <div className="panel-heading"><div><h2>Ticket controls</h2><p>Update classification and status.</p></div></div>
